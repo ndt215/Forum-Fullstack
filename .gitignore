@@ -1,0 +1,58 @@
+# ===========================================================================
+# .gitignore cho dự án Măm Măm Food Review (root)
+# Các file .gitignore trong BackEnd/ và FrontEnd/ vẫn được áp dụng riêng.
+# ===========================================================================
+
+# --- Biến môi trường / bí mật ---------------------------------------------
+.env
+.env.*
+!.env.example
+*.local
+
+# --- Python / Django -------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Cơ sở dữ liệu SQLite (dùng migrate + tao_du_lieu_mau để tạo lại)
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+
+# File media người dùng tải lên (giữ .gitkeep để tạo thư mục)
+BackEnd/media/*
+!BackEnd/media/.gitkeep
+BackEnd/staticfiles/
+
+# --- Node / Vite -----------------------------------------------------------
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- IDE / hệ điều hành ----------------------------------------------------
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Log / file tạm --------------------------------------------------------
+logs/
+*.log
+*.tmp
+*.bak

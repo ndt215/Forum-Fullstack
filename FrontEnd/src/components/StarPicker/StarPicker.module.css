@@ -1,0 +1,45 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.star,
+.starActive {
+  display: grid;
+  place-items: center;
+  padding: 1px;
+  border-radius: 6px;
+  color: #d9c8ba;
+  transition:
+    color 120ms ease,
+    transform 120ms ease;
+}
+
+.starActive {
+  color: #f0a04b;
+}
+
+.star:hover:not(:disabled),
+.starActive:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.star:disabled,
+.starActive:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.value {
+  min-width: 54px;
+  color: var(--color-muted);
+  font-size: 0.64rem;
+  font-weight: 600;
+}
