@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Lora:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600&family=Inter:wght@400..700&display=swap");
 
 :root {
   --color-primary: #e25822;
@@ -18,7 +18,12 @@
   --color-danger: #c0392b;
 
   --font-body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
-  --font-display: "Lora", Georgia, "Times New Roman", serif;
+  /* Serif hiển thị: Source Serif 4 có đủ bộ dấu tiếng Việt ở cả dạng thường và
+     in nghiêng (Lora trước đây bị lỗi dấu ở một số chữ như "bữa ăn"). */
+  --font-display: "Source Serif 4", "Noto Serif", Georgia, "Times New Roman", serif;
+  /* Nhãn chữ in hoa (eyebrow, kicker, nhãn thống kê): Be Vietnam Pro không hợp
+     với chữ toàn hoa có dấu nên dùng Inter cho các nhãn này. */
+  --font-label: "Inter", "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
 
   --radius-xs: 8px;
   --radius-sm: 12px;
@@ -134,9 +139,10 @@ ol {
   align-items: center;
   gap: 8px;
   color: var(--color-primary);
+  font-family: var(--font-label);
   font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -154,6 +160,29 @@ ol {
 
 .section-anchor {
   scroll-margin-top: calc(var(--header-height) + 24px);
+}
+
+/* Màn hình chờ trong lúc kiểm tra phiên đăng nhập (App.jsx). */
+.boot-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 100vh;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+}
+
+.boot-spinner {
+  color: var(--color-primary);
+  animation: boot-quay 900ms linear infinite;
+}
+
+@keyframes boot-quay {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 720px) {

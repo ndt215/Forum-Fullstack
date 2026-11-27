@@ -112,11 +112,11 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link className={styles.loginLink} to="/?auth=dang-nhap">
+              <Link className={styles.loginLink} to="/dang-nhap">
                 <LogIn size={15} aria-hidden="true" />
                 Đăng nhập
               </Link>
-              <Link className={styles.cta} to="/?auth=dang-ky">
+              <Link className={styles.cta} to="/dang-ky">
                 <UserPlus size={15} aria-hidden="true" />
                 Đăng ký
               </Link>

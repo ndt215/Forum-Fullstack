@@ -51,6 +51,7 @@
 .brandTagline {
   margin-top: 4px;
   color: var(--color-muted);
+  font-family: var(--font-label);
   font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.14em;

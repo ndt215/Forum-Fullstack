@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import {
   Bookmark,
+  BookmarkCheck,
   Flame,
   Heart,
+  Loader2,
   MapPin,
   MessageCircle,
   Play,
@@ -15,6 +17,9 @@ import styles from './ReviewCard.module.css';
 /**
  * Card món ăn dùng chung cho Feed và Profile.
  * Dữ liệu có thể đến từ API (xem utils/adapters.js).
+ *
+ * Nếu truyền `onToggleSave`, góc trên bên phải thẻ có nút lưu / bỏ lưu quán
+ * (bảng QuanYeuThich ở BackEnd).
  */
 export default function ReviewCard({
   id,
@@ -36,12 +41,44 @@ export default function ReviewCard({
   comments = 0,
   isHot = false,
   videoUrl,
+  saved = false,
+  saveLoading = false,
+  onToggleSave,
 }) {
   const href = to || (id ? `/review/${id}` : '/feed');
   const diem = Number(rating) || 0;
+  const tenQuan = restaurant || 'quán ăn';
 
   return (
     <article className={styles.card}>
+      {onToggleSave ? (
+        <button
+          type="button"
+          className={`${styles.saveButton} ${saved ? styles.saveButtonActive : ''}`}
+          onClick={onToggleSave}
+          disabled={saveLoading}
+          aria-pressed={saved}
+          aria-label={saved ? `Bỏ lưu ${tenQuan}` : `Lưu ${tenQuan}`}
+          title={saved ? 'Bỏ lưu quán' : 'Lưu quán'}
+        >
+          {saveLoading ? (
+            <Loader2 size={15} className={styles.spin} aria-hidden="true" />
+          ) : saved ? (
+            <BookmarkCheck size={16} aria-hidden="true" />
+          ) : (
+            <Bookmark size={16} aria-hidden="true" />
+          )}
+        </button>
+      ) : (
+        // Không truyền onToggleSave vẫn giữ biểu tượng dấu trang như trước.
+        <span
+          className={`${styles.saveButton} ${styles.saveButtonStatic}`}
+          aria-hidden="true"
+        >
+          <Bookmark size={16} />
+        </span>
+      )}
+
       <Link to={href} className={styles.link} aria-label={`Xem review: ${title}`}>
         <div className={styles.media}>
           {image ? (
@@ -65,10 +102,6 @@ export default function ReviewCard({
               </span>
             )}
             {cuisine && <span className={styles.badge}>{cuisine}</span>}
-          </span>
-
-          <span className={styles.bookmark} aria-hidden="true">
-            <Bookmark size={16} />
           </span>
 
           {videoUrl && (

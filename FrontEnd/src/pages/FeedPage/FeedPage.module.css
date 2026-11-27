@@ -137,8 +137,8 @@
 .sortBox {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 11px;
+  gap: 8px;
+  padding: 9px 16px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-full);
   background: #fff;
@@ -153,7 +153,7 @@
 }
 
 .sortBox select {
-  padding: 0;
+  padding: 2px 4px;
   border: 0;
   background: transparent;
   color: var(--color-ink-soft);
@@ -176,6 +176,16 @@
   margin-top: 46px;
   color: var(--color-muted);
   font-size: 0.68rem;
+}
+
+.saveNote {
+  margin-top: 12px;
+  padding: 9px 13px;
+  border: 1px solid rgba(47, 143, 91, 0.22);
+  border-radius: 12px;
+  background: #edf8f1;
+  color: #257046;
+  font-size: 0.72rem;
 }
 
 .feedMeta > span:first-child {

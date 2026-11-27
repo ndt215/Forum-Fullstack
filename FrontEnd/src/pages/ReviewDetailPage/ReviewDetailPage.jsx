@@ -247,7 +247,7 @@ export default function ReviewDetailPage() {
   /* ---------------------------------------------------------------- */
   function yeuCauDangNhap() {
     const next = encodeURIComponent(`/review/${id}`);
-    navigate(`/?auth=dang-nhap&next=${next}`);
+    navigate(`/dang-nhap?next=${next}`);
   }
 
   async function xuLyThich() {
@@ -697,7 +697,6 @@ export default function ReviewDetailPage() {
                     Thảo luận <span>({soBinhLuan})</span>
                   </h2>
                 </div>
-                <p>Bình luận được lưu trực tiếp vào BackEnd.</p>
               </div>
 
               {commentsLoading ? (
@@ -787,7 +786,7 @@ export default function ReviewDetailPage() {
                 </form>
               ) : (
                 <p className={styles.commentPrompt}>
-                  <Link to={`/?auth=dang-nhap&next=${encodeURIComponent(`/review/${id}`)}`}>
+                  <Link to={`/dang-nhap?next=${encodeURIComponent(`/review/${id}`)}`}>
                     Đăng nhập
                   </Link>{" "}
                   để tham gia thảo luận cùng cộng đồng Măm Măm.
@@ -892,7 +891,7 @@ export default function ReviewDetailPage() {
 
             {!isAuthenticated && (
               <p className={styles.loginHint}>
-                <Link to={`/?auth=dang-nhap&next=${encodeURIComponent(`/review/${id}`)}`}>
+                <Link to={`/dang-nhap?next=${encodeURIComponent(`/review/${id}`)}`}>
                   Đăng nhập
                 </Link>{" "}
                 để chấm điểm và bình luận bài review này.

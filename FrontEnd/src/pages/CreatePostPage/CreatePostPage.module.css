@@ -611,8 +611,9 @@
   margin-bottom: 9px;
   padding: 0 3px;
   color: var(--color-muted);
+  font-family: var(--font-label);
   font-size: 0.61rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -705,8 +706,9 @@
   align-items: center;
   gap: 4px;
   color: var(--color-primary-dark);
+  font-family: var(--font-label);
   font-size: 0.58rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }

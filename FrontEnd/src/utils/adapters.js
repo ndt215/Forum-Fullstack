@@ -9,6 +9,8 @@ export function baiReviewToCard(review) {
   return {
     id: review.id,
     to: `/review/${review.id}`,
+    // ID quán để bật/tắt lưu quán yêu thích (bảng QuanYeuThich).
+    restaurantId: review.nha_hang,
     image: review.anh_bia || anhDuPhong,
     cuisine: cuisineLabel(review.loai_am_thuc),
     title: review.tieu_de,
@@ -36,6 +38,7 @@ export function quanYeuThichToCard(muc) {
   return {
     id: quan.id,
     to: bai.id ? `/review/${bai.id}` : '/feed',
+    restaurantId: quan.id,
     image: bai.anh_bia || anhDuPhong,
     cuisine: cuisineLabel(quan.loai_am_thuc),
     title: bai.tieu_de || `${quan.ten_quan} chưa có review nào`,

@@ -1,4 +1,5 @@
 .card {
+  position: relative;
   height: 100%;
   overflow: hidden;
   border: 1px solid var(--color-line);
@@ -96,19 +97,62 @@
   color: #fff;
 }
 
-.bookmark {
+.saveButton {
   position: absolute;
   top: 12px;
   right: 12px;
+  z-index: 2;
   display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 253, 251, 0.9);
+  background: rgba(255, 253, 251, 0.92);
   color: var(--color-ink-soft);
+  box-shadow: var(--shadow-xs);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #fff;
+  color: var(--color-primary-dark);
+  transform: scale(1.06);
+}
+
+.saveButton:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+/* Dấu trang tĩnh cho thẻ không có thao tác lưu quán. */
+.saveButtonStatic {
+  pointer-events: none;
+  cursor: default;
+}
+
+.saveButtonActive {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.saveButtonActive:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  color: #fff;
+}
+
+.spin {
+  animation: quay 900ms linear infinite;
+}
+
+@keyframes quay {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .price {

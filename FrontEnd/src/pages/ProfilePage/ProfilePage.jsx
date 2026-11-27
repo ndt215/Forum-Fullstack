@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
@@ -16,9 +16,11 @@ import {
 import ReviewCard from '../../components/ReviewCard/ReviewCard';
 import { useAuth } from '../../context/AuthContext';
 import {
+  boLuuQuanYeuThich,
   layDanhSachBaiReview,
   layQuanYeuThich,
   layTheoDoi,
+  luuQuanYeuThich,
 } from '../../api/reviews';
 import { baiReviewToCard, quanYeuThichToCard } from '../../utils/adapters';
 import {
@@ -45,8 +47,46 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
   const [shareNote, setShareNote] = useState('');
+  const [saveLoadingId, setSaveLoadingId] = useState(null);
+  const [saveNote, setSaveNote] = useState('');
 
   const tab = searchParams.get('tab') === 'saved' ? 'saved' : 'posts';
+
+  // Quán đã lưu: { [nha_hang_id]: quan_yeu_thich_id } để vẽ nút lưu/bỏ lưu.
+  const savedMap = useMemo(() => {
+    const banDo = {};
+
+    savedPlaces.forEach((muc) => {
+      banDo[muc.nha_hang] = muc.id;
+    });
+
+    return banDo;
+  }, [savedPlaces]);
+
+  async function xuLyLuuQuan(nhaHangId) {
+    if (!nhaHangId || saveLoadingId) return;
+
+    const daLuuId = savedMap[nhaHangId];
+
+    setSaveLoadingId(nhaHangId);
+    setSaveNote('');
+
+    try {
+      if (daLuuId) {
+        await boLuuQuanYeuThich(daLuuId);
+        setSavedPlaces((truoc) => truoc.filter((muc) => muc.id !== daLuuId));
+        setSaveNote('Đã bỏ lưu quán khỏi bộ sưu tập.');
+      } else {
+        const moi = await luuQuanYeuThich(nhaHangId);
+        setSavedPlaces((truoc) => [moi, ...truoc]);
+        setSaveNote('Đã lưu quán vào bộ sưu tập của bạn.');
+      }
+    } catch (loi) {
+      setSaveNote(loi.message || 'Không cập nhật được quán yêu thích.');
+    } finally {
+      setSaveLoadingId(null);
+    }
+  }
 
   function doiTab(tabMoi) {
     const thamSoMoi = new URLSearchParams(searchParams);
@@ -271,9 +311,6 @@ export default function ProfilePage() {
               </span>
               <h2 id="collection-title">Dấu chân ăn uống</h2>
             </div>
-            <span className={styles.collectionNote}>
-              Dữ liệu lấy trực tiếp từ BackEnd
-            </span>
           </div>
 
           {error && (
@@ -315,6 +352,12 @@ export default function ProfilePage() {
             })}
           </div>
 
+          {saveNote && (
+            <p className={styles.saveNote} role="status">
+              {saveNote}
+            </p>
+          )}
+
           <div className={styles.tabPanel}>
             {tab === 'posts' ? (
               reviewCount === 0 ? (
@@ -335,7 +378,13 @@ export default function ProfilePage() {
               ) : (
                 <div className={styles.reviewGrid}>
                   {reviews.map((review) => (
-                    <ReviewCard key={review.id} {...review} />
+                    <ReviewCard
+                      key={review.id}
+                      {...review}
+                      saved={Boolean(savedMap[review.restaurantId])}
+                      saveLoading={saveLoadingId === review.restaurantId}
+                      onToggleSave={() => xuLyLuuQuan(review.restaurantId)}
+                    />
                   ))}
                 </div>
               )
@@ -357,7 +406,13 @@ export default function ProfilePage() {
             ) : (
               <div className={styles.reviewGrid}>
                 {savedPlaces.map((muc) => (
-                  <ReviewCard key={muc.id} {...quanYeuThichToCard(muc)} />
+                  <ReviewCard
+                    key={muc.id}
+                    {...quanYeuThichToCard(muc)}
+                    saved
+                    saveLoading={saveLoadingId === muc.nha_hang}
+                    onToggleSave={() => xuLyLuuQuan(muc.nha_hang)}
+                  />
                 ))}
               </div>
             )}

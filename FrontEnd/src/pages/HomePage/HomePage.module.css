@@ -63,12 +63,7 @@
   gap: 16px;
   justify-self: end;
   width: 100%;
-  max-width: 376px;
-}
-
-.authAnchor {
-  width: 100%;
-  scroll-margin-top: calc(var(--header-height) + 24px);
+  max-width: 420px;
 }
 
 .content {
@@ -85,6 +80,7 @@
   border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.08);
   color: #ffd7bb;
+  font-family: var(--font-label);
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -188,6 +184,7 @@
 
 .stats dt {
   color: rgba(255, 248, 242, 0.55);
+  font-family: var(--font-label);
   font-size: 0.57rem;
   font-weight: 700;
   letter-spacing: 0.09em;
@@ -221,6 +218,7 @@
   align-items: center;
   gap: 5px;
   color: var(--color-primary-dark);
+  font-family: var(--font-label);
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -331,18 +329,15 @@
   text-decoration: underline;
 }
 
+/* Ghi chú khu vực: nằm trong luồng nội dung để không đè lên thẻ bên phải. */
 .sideNote {
-  position: absolute;
-  right: 22px;
-  top: 50%;
-  z-index: 2;
+  margin-top: 26px;
   color: rgba(255, 255, 255, 0.45);
+  font-family: var(--font-label);
   font-size: 0.58rem;
   font-weight: 600;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  transform: translateY(-50%) rotate(90deg);
-  transform-origin: center;
 }
 
 @media (max-width: 1060px) {
@@ -365,10 +360,6 @@
   .rightColumn {
     max-width: 460px;
     justify-self: start;
-  }
-
-  .sideNote {
-    display: none;
   }
 }
 
