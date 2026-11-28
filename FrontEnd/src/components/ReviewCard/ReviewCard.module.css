@@ -129,6 +129,15 @@
   opacity: 0.75;
 }
 
+<<<<<<< HEAD
+=======
+/* Dấu trang tĩnh cho thẻ không có thao tác lưu quán. */
+.saveButtonStatic {
+  pointer-events: none;
+  cursor: default;
+}
+
+>>>>>>> 10e11e78a0f876c04775151896a07e332623ca5d
 .saveButtonActive {
   background: var(--color-primary);
   color: #fff;

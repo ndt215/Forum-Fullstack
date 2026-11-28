@@ -101,6 +101,42 @@ export default function ProfilePage() {
     }
   }
 
+  // Quán đã lưu: { [nha_hang_id]: quan_yeu_thich_id } để vẽ nút lưu/bỏ lưu.
+  const savedMap = useMemo(() => {
+    const banDo = {};
+
+    savedPlaces.forEach((muc) => {
+      banDo[muc.nha_hang] = muc.id;
+    });
+
+    return banDo;
+  }, [savedPlaces]);
+
+  async function xuLyLuuQuan(nhaHangId) {
+    if (!nhaHangId || saveLoadingId) return;
+
+    const daLuuId = savedMap[nhaHangId];
+
+    setSaveLoadingId(nhaHangId);
+    setSaveNote('');
+
+    try {
+      if (daLuuId) {
+        await boLuuQuanYeuThich(daLuuId);
+        setSavedPlaces((truoc) => truoc.filter((muc) => muc.id !== daLuuId));
+        setSaveNote('Đã bỏ lưu quán khỏi bộ sưu tập.');
+      } else {
+        const moi = await luuQuanYeuThich(nhaHangId);
+        setSavedPlaces((truoc) => [moi, ...truoc]);
+        setSaveNote('Đã lưu quán vào bộ sưu tập của bạn.');
+      }
+    } catch (loi) {
+      setSaveNote(loi.message || 'Không cập nhật được quán yêu thích.');
+    } finally {
+      setSaveLoadingId(null);
+    }
+  }
+
   function doiTab(tabMoi) {
     const thamSoMoi = new URLSearchParams(searchParams);
 
@@ -395,7 +431,11 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className={styles.reviewGrid}>
+<<<<<<< HEAD
                   {publishedReviews.map((review) => (
+=======
+                  {reviews.map((review) => (
+>>>>>>> 10e11e78a0f876c04775151896a07e332623ca5d
                     <ReviewCard
                       key={review.id}
                       {...review}
