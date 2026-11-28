@@ -1,13 +1,18 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import Header from "../Header/Header";
 import styles from "./ProtectedRoute.module.css";
 
 /**
- * Chặn các trang cần đăng nhập (/create, /profile).
- * Chưa đăng nhập thì quay về trang chủ và mở sẵn form đăng nhập.
+ * Cổng bảo vệ cho toàn bộ khu vực cần đăng nhập.
+ *
+ * Khi mở web, <AuthProvider> gọi một lần GET /api/ho-so/ để kiểm tra phiên
+ * đăng nhập đã lưu (session cookie do Django cấp). Trong lúc chờ thì hiện màn
+ * hình "Đang kiểm tra phiên đăng nhập"; nếu chưa có phiên thì chuyển ngay sang
+ * trang /dang-nhap kèm đường dẫn quay lại sau khi đăng nhập.
  */
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute() {
   const { isAuthenticated, dangKhoiTao } = useAuth();
   const location = useLocation();
 
@@ -22,10 +27,15 @@ export default function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     const next = encodeURIComponent(`${location.pathname}${location.search}`);
-    return (
-      <Navigate to={`/?auth=dang-nhap&next=${next}`} replace />
-    );
+    return <Navigate to={`/dang-nhap?next=${next}`} replace />;
   }
 
-  return children;
+  return (
+    <>
+      <Header />
+      <main>
+        <Outlet />
+      </main>
+    </>
+  );
 }

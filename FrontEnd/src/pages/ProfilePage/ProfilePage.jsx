@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
   Award,
   Bookmark,
   CalendarDays,
+  Clock,
   Heart,
   Loader2,
   PenLine,
@@ -12,13 +13,16 @@ import {
   Share2,
   Sparkles,
   UtensilsCrossed,
+  XCircle,
 } from 'lucide-react';
 import ReviewCard from '../../components/ReviewCard/ReviewCard';
 import { useAuth } from '../../context/AuthContext';
 import {
+  boLuuQuanYeuThich,
   layDanhSachBaiReview,
   layQuanYeuThich,
   layTheoDoi,
+  luuQuanYeuThich,
 } from '../../api/reviews';
 import { baiReviewToCard, quanYeuThichToCard } from '../../utils/adapters';
 import {
@@ -30,8 +34,15 @@ import styles from './ProfilePage.module.css';
 
 const TABS = [
   { id: 'posts', label: 'Bài đã đăng', icon: PenLine },
+  { id: 'pending', label: 'Đang duyệt', icon: Clock },
   { id: 'saved', label: 'Quán đã lưu', icon: Bookmark },
 ];
+
+const NHAN_TRANG_THAI = {
+  cho_duyet: 'Đang chờ duyệt',
+  bi_tu_choi: 'Bị từ chối',
+  an: 'Đã ẩn',
+};
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -39,14 +50,56 @@ export default function ProfilePage() {
 
   const [reviews, setReviews] = useState([]);
   const [savedPlaces, setSavedPlaces] = useState([]);
-  const [reviewCount, setReviewCount] = useState(0);
   const [followerCount, setFollowerCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
   const [shareNote, setShareNote] = useState('');
+  const [saveLoadingId, setSaveLoadingId] = useState(null);
+  const [saveNote, setSaveNote] = useState('');
 
-  const tab = searchParams.get('tab') === 'saved' ? 'saved' : 'posts';
+  const tabParam = searchParams.get('tab');
+  const tab = tabParam === 'saved' || tabParam === 'pending' ? tabParam : 'posts';
+
+  // Bài đã đăng (đã được duyệt) và bài đang chờ duyệt / bị từ chối.
+  const publishedReviews = reviews.filter((review) => review.status === 'da_dang');
+  const pendingReviews = reviews.filter((review) => review.status !== 'da_dang');
+
+  // Quán đã lưu: { [nha_hang_id]: quan_yeu_thich_id } để vẽ nút lưu/bỏ lưu.
+  const savedMap = useMemo(() => {
+    const banDo = {};
+
+    savedPlaces.forEach((muc) => {
+      banDo[muc.nha_hang] = muc.id;
+    });
+
+    return banDo;
+  }, [savedPlaces]);
+
+  async function xuLyLuuQuan(nhaHangId) {
+    if (!nhaHangId || saveLoadingId) return;
+
+    const daLuuId = savedMap[nhaHangId];
+
+    setSaveLoadingId(nhaHangId);
+    setSaveNote('');
+
+    try {
+      if (daLuuId) {
+        await boLuuQuanYeuThich(daLuuId);
+        setSavedPlaces((truoc) => truoc.filter((muc) => muc.id !== daLuuId));
+        setSaveNote('Đã bỏ lưu quán khỏi bộ sưu tập.');
+      } else {
+        const moi = await luuQuanYeuThich(nhaHangId);
+        setSavedPlaces((truoc) => [moi, ...truoc]);
+        setSaveNote('Đã lưu quán vào bộ sưu tập của bạn.');
+      }
+    } catch (loi) {
+      setSaveNote(loi.message || 'Không cập nhật được quán yêu thích.');
+    } finally {
+      setSaveLoadingId(null);
+    }
+  }
 
   function doiTab(tabMoi) {
     const thamSoMoi = new URLSearchParams(searchParams);
@@ -84,7 +137,6 @@ export default function ProfilePage() {
 
         if (reviewRes.status === 'fulfilled') {
           setReviews((reviewRes.value?.results || []).map(baiReviewToCard));
-          setReviewCount(reviewRes.value?.count || 0);
         } else {
           setError(
             reviewRes.reason?.message || 'Không tải được bài review của bạn.',
@@ -128,10 +180,11 @@ export default function ProfilePage() {
     0,
   );
   const tenHienThi = user.ho_ten || user.username;
+  const soBaiDaDang = publishedReviews.length;
   const thanhVienBadge =
-    reviewCount >= 3
+    soBaiDaDang >= 3
       ? 'Thành viên tích cực'
-      : reviewCount >= 1
+      : soBaiDaDang >= 1
         ? 'Foodie mới'
         : 'Thành viên mới';
 
@@ -225,7 +278,7 @@ export default function ProfilePage() {
             <dl className={styles.stats}>
               <div>
                 <dt>Bài review</dt>
-                <dd>{formatCompact(reviewCount)}</dd>
+                <dd>{formatCompact(soBaiDaDang)}</dd>
               </div>
               <div>
                 <dt>Quán đã lưu</dt>
@@ -245,11 +298,11 @@ export default function ProfilePage() {
           <div className={styles.achievements} aria-label="Thành tích">
             <span>
               <Award size={14} aria-hidden="true" />
-              {reviewCount >= 3 ? 'Top reviewer' : 'Thành viên Măm Măm'}
+              {soBaiDaDang >= 3 ? 'Top reviewer' : 'Thành viên Măm Măm'}
             </span>
             <span>
               <Sparkles size={14} aria-hidden="true" />
-              {reviewCount >= 1 ? 'Chuyên gia ẩm thực' : 'Foodie mới'}
+              {soBaiDaDang >= 1 ? 'Chuyên gia ẩm thực' : 'Foodie mới'}
             </span>
             <span>
               <Heart size={14} aria-hidden="true" />
@@ -271,9 +324,6 @@ export default function ProfilePage() {
               </span>
               <h2 id="collection-title">Dấu chân ăn uống</h2>
             </div>
-            <span className={styles.collectionNote}>
-              Dữ liệu lấy trực tiếp từ BackEnd
-            </span>
           </div>
 
           {error && (
@@ -294,7 +344,12 @@ export default function ProfilePage() {
           <div className={styles.tabs} role="tablist" aria-label="Bộ sưu tập">
             {TABS.map((item) => {
               const Icon = item.icon;
-              const soLuong = item.id === 'posts' ? reviewCount : savedPlaces.length;
+              const soLuong =
+                item.id === 'posts'
+                  ? publishedReviews.length
+                  : item.id === 'pending'
+                    ? pendingReviews.length
+                    : savedPlaces.length;
 
               return (
                 <button
@@ -315,9 +370,15 @@ export default function ProfilePage() {
             })}
           </div>
 
+          {saveNote && (
+            <p className={styles.saveNote} role="status">
+              {saveNote}
+            </p>
+          )}
+
           <div className={styles.tabPanel}>
             {tab === 'posts' ? (
-              reviewCount === 0 ? (
+              publishedReviews.length === 0 ? (
                 <div className={styles.emptyState}>
                   <span className={styles.emptyIcon} aria-hidden="true">
                     <PenLine size={26} />
@@ -334,9 +395,99 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className={styles.reviewGrid}>
-                  {reviews.map((review) => (
-                    <ReviewCard key={review.id} {...review} />
+                  {publishedReviews.map((review) => (
+                    <ReviewCard
+                      key={review.id}
+                      {...review}
+                      saved={Boolean(savedMap[review.restaurantId])}
+                      saveLoading={saveLoadingId === review.restaurantId}
+                      onToggleSave={() => xuLyLuuQuan(review.restaurantId)}
+                    />
                   ))}
+                </div>
+              )
+            ) : tab === 'pending' ? (
+              pendingReviews.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <span className={styles.emptyIcon} aria-hidden="true">
+                    <Clock size={26} />
+                  </span>
+                  <h3>Không có bài nào đang chờ duyệt</h3>
+                  <p>
+                    Bài bạn gửi sẽ xuất hiện ở đây cho tới khi quản trị viên duyệt
+                    xong, kèm lý do nếu bài bị từ chối.
+                  </p>
+                  <Link to="/create" className={styles.emptyButton}>
+                    <PenLine size={14} aria-hidden="true" />
+                    Viết review mới
+                  </Link>
+                </div>
+              ) : (
+                <div className={styles.pendingList}>
+                  <p className={styles.pendingIntro}>
+                    Bài bạn gửi sẽ nằm ở đây cho tới khi quản trị viên duyệt
+                    xong. Nếu bài bị từ chối, lý do sẽ hiện ngay dưới tiêu đề.
+                  </p>
+
+                  {pendingReviews.map((review) => {
+                    const biTuChoi = review.status === 'bi_tu_choi';
+
+                    return (
+                      <Link
+                        key={review.id}
+                        to={`/review/${review.id}`}
+                        className={styles.pendingItem}
+                      >
+                        {review.image ? (
+                          <img
+                            className={styles.pendingThumb}
+                            src={review.image}
+                            alt=""
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span
+                            className={styles.pendingThumb}
+                            aria-hidden="true"
+                          />
+                        )}
+
+                        <span className={styles.pendingBody}>
+                          <span
+                            className={`${styles.pendingBadge} ${
+                              biTuChoi
+                                ? styles.badgeRejected
+                                : styles.badgeWaiting
+                            }`}
+                          >
+                            {biTuChoi ? (
+                              <XCircle size={12} aria-hidden="true" />
+                            ) : (
+                              <Clock size={12} aria-hidden="true" />
+                            )}
+                            {NHAN_TRANG_THAI[review.status] || review.statusLabel}
+                          </span>
+
+                          <strong className={styles.pendingTitle}>
+                            {review.title}
+                          </strong>
+
+                          <span className={styles.pendingMeta}>
+                            {review.restaurant}
+                            {review.area ? ` · ${review.area}` : ''} · Gửi{' '}
+                            {review.time}
+                          </span>
+
+                          {biTuChoi && review.rejectReason && (
+                            <span className={styles.pendingReason}>
+                              <strong>Lý do từ chối:</strong>{' '}
+                              {review.rejectReason}
+                            </span>
+                          )}
+                        </span>
+                      </Link>
+                    );
+                  })}
                 </div>
               )
             ) : savedPlaces.length === 0 ? (
@@ -357,7 +508,13 @@ export default function ProfilePage() {
             ) : (
               <div className={styles.reviewGrid}>
                 {savedPlaces.map((muc) => (
-                  <ReviewCard key={muc.id} {...quanYeuThichToCard(muc)} />
+                  <ReviewCard
+                    key={muc.id}
+                    {...quanYeuThichToCard(muc)}
+                    saved
+                    saveLoading={saveLoadingId === muc.nha_hang}
+                    onToggleSave={() => xuLyLuuQuan(muc.nha_hang)}
+                  />
                 ))}
               </div>
             )}

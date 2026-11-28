@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight, PenLine, Sparkles } from "lucide-react";
-import AuthCard from "../../components/Auth/AuthCard";
 import RatingStars from "../../components/RatingStars/RatingStars";
 import { layDanhSachBaiReview } from "../../api/reviews";
 import { layNhaHang } from "../../api/catalog";
@@ -16,22 +15,7 @@ import heroFood from "../../assets/img/hero-food.jpg";
 import avatarMinhAnh from "../../assets/img/avatar-minh-anh.jpg";
 import avatarNgocTran from "../../assets/img/avatar-ngoc-tran.jpg";
 
-function layTabAuth(giaTri) {
-  if (giaTri === "dang-ky" || giaTri === "register") return "register";
-  return "login";
-}
-
 export default function HomePage() {
-  const [searchParams] = useSearchParams();
-  const authRef = useRef(null);
-
-  const authParam = searchParams.get("auth");
-  const authTab = layTabAuth(authParam);
-
-  const rawNext = searchParams.get("next") || "";
-  const nextPath =
-    rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "";
-
   const [noiBat, setNoiBat] = useState(null);
   const [thongKe, setThongKe] = useState({
     reviews: null,
@@ -39,17 +23,16 @@ export default function HomePage() {
     cities: null,
   });
 
-  // Cuộn tới thẻ đăng nhập khi Header điều hướng tới /?auth=...
-  useEffect(() => {
-    if (!authParam) return;
-    authRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [authParam]);
-
   // Bài review nổi bật (điểm cao nhất) + số liệu thật từ API.
+  // Chỉ tính bài đã duyệt: bài chờ duyệt / bị từ chối không lên trang chủ.
   useEffect(() => {
     let conHieuLuc = true;
 
-    layDanhSachBaiReview({ ordering: "-diem_trung_binh", page_size: 1 })
+    layDanhSachBaiReview({
+      ordering: "-diem_trung_binh",
+      trang_thai: "da_dang",
+      page_size: 1,
+    })
       .then((data) => {
         if (conHieuLuc) setNoiBat(data?.results?.[0] || null);
       })
@@ -58,7 +41,7 @@ export default function HomePage() {
       });
 
     Promise.allSettled([
-      layDanhSachBaiReview({ page_size: 1 }),
+      layDanhSachBaiReview({ trang_thai: "da_dang", page_size: 1 }),
       layNhaHang({ pageSize: 100 }),
     ]).then(([reviewRes, quanRes]) => {
       if (!conHieuLuc) return;
@@ -160,13 +143,11 @@ export default function HomePage() {
               <dd>{soThanhPho}</dd>
             </div>
           </dl>
+
+          <p className={styles.sideNote}>Hà Nội · Sài Gòn · Đà Nẵng</p>
         </div>
 
         <div className={styles.rightColumn}>
-          <div ref={authRef} className={styles.authAnchor} id="dang-nhap">
-            <AuthCard key={authTab} initialTab={authTab} nextPath={nextPath} />
-          </div>
-
           <aside className={styles.featuredCard} aria-label="Review nổi bật">
             <span className={styles.featuredLabel}>
               <Sparkles size={12} aria-hidden="true" />
@@ -214,10 +195,6 @@ export default function HomePage() {
           </aside>
         </div>
       </div>
-
-      <span className={styles.sideNote} aria-hidden="true">
-        Hà Nội · Sài Gòn · Đà Nẵng
-      </span>
     </section>
   );
 }

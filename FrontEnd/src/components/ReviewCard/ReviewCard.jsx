@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import {
   Bookmark,
+  BookmarkCheck,
   Flame,
   Heart,
+  Loader2,
   MapPin,
   MessageCircle,
   Play,
@@ -15,6 +17,13 @@ import styles from './ReviewCard.module.css';
 /**
  * Card món ăn dùng chung cho Feed và Profile.
  * Dữ liệu có thể đến từ API (xem utils/adapters.js).
+ *
+ * Nút lưu quán chỉ hiện khi:
+ * - thẻ đã được truyền `onToggleSave`, và
+ * - quán đã được lưu (`saved`) hoặc thẻ cho phép hiện nút lưu (`allowSave`).
+ *
+ * Ở Feed, `allowSave = false` nên thẻ chưa lưu không có nút; người dùng lưu quán
+ * ở trang chi tiết bài viết, khi quay lại Feed thẻ đó hiện nút "bỏ lưu".
  */
 export default function ReviewCard({
   id,
@@ -36,12 +45,38 @@ export default function ReviewCard({
   comments = 0,
   isHot = false,
   videoUrl,
+  saved = false,
+  saveLoading = false,
+  allowSave = true,
+  onToggleSave,
 }) {
   const href = to || (id ? `/review/${id}` : '/feed');
   const diem = Number(rating) || 0;
+  const tenQuan = restaurant || 'quán ăn';
+  const hienNutLuu = Boolean(onToggleSave) && (saved || allowSave);
 
   return (
     <article className={styles.card}>
+      {hienNutLuu && (
+        <button
+          type="button"
+          className={`${styles.saveButton} ${saved ? styles.saveButtonActive : ''}`}
+          onClick={onToggleSave}
+          disabled={saveLoading}
+          aria-pressed={saved}
+          aria-label={saved ? `Bỏ lưu ${tenQuan}` : `Lưu ${tenQuan}`}
+          title={saved ? 'Bỏ lưu quán' : 'Lưu quán'}
+        >
+          {saveLoading ? (
+            <Loader2 size={15} className={styles.spin} aria-hidden="true" />
+          ) : saved ? (
+            <BookmarkCheck size={16} aria-hidden="true" />
+          ) : (
+            <Bookmark size={16} aria-hidden="true" />
+          )}
+        </button>
+      )}
+
       <Link to={href} className={styles.link} aria-label={`Xem review: ${title}`}>
         <div className={styles.media}>
           {image ? (
@@ -65,10 +100,6 @@ export default function ReviewCard({
               </span>
             )}
             {cuisine && <span className={styles.badge}>{cuisine}</span>}
-          </span>
-
-          <span className={styles.bookmark} aria-hidden="true">
-            <Bookmark size={16} />
           </span>
 
           {videoUrl && (

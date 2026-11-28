@@ -1,8 +1,9 @@
 """
-Đăng ký 10 Model vào trang quản trị Django (/admin/).
+Đăng ký 11 Model vào trang quản trị Django (/admin/).
 
 Nhờ file này, sau khi tạo superuser bạn có thể quản lý toàn bộ dữ liệu
-(thêm quán, duyệt bài review, xem ảnh, bình luận...) bằng giao diện web.
+(thêm quán, duyệt / từ chối bài review, xem báo cáo, xem ảnh, bình luận...)
+bằng giao diện web.
 """
 
 from django.contrib import admin
@@ -10,6 +11,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from .models import (
     BaiReview,
+    BaoCao,
     BinhLuan,
     ChamDiem,
     HinhAnh,
@@ -155,6 +157,33 @@ class BaiReviewAdmin(admin.ModelAdmin):
     readonly_fields = ["diem_trung_binh", "luot_thich", "ngay_tao", "ngay_cap_nhat"]
     inlines = [ChamDiemInline, HinhAnhInline, BinhLuanInline]
     list_per_page = 20
+    actions = ["duyet_bai", "tu_choi_bai"]
+
+    @admin.action(description="Duyệt các bài đã chọn (chuyển sang Đã đăng)")
+    def duyet_bai(self, request, queryset):
+        so_bai = queryset.update(
+            trang_thai=BaiReview.TrangThai.DA_DANG,
+            ly_do_tu_choi="",
+        )
+        self.message_user(request, f"Đã duyệt {so_bai} bài viết.")
+
+    @admin.action(description="Từ chối các bài đã chọn (lấy lý do đã nhập)")
+    def tu_choi_bai(self, request, queryset):
+        so_bai = 0
+
+        for bai in queryset:
+            bai.trang_thai = BaiReview.TrangThai.BI_TU_CHOI
+            if not bai.ly_do_tu_choi.strip():
+                bai.ly_do_tu_choi = (
+                    "Bài viết chưa phù hợp với tiêu chuẩn cộng đồng Măm Măm."
+                )
+            bai.save(update_fields=["trang_thai", "ly_do_tu_choi"])
+            so_bai += 1
+
+        self.message_user(
+            request,
+            f"Đã từ chối {so_bai} bài viết. Nhớ nhập 'Lý do từ chối' để tác giả đọc được.",
+        )
 
 
 # ===========================================================================
@@ -230,3 +259,36 @@ class TheoDoiAdmin(admin.ModelAdmin):
         "nguoi_theo_doi__username",
         "nguoi_duoc_theo_doi__username",
     ]
+
+
+# ===========================================================================
+# 11. BÁO CÁO GỬI QUẢN TRỊ VIÊN
+# ===========================================================================
+@admin.register(BaoCao)
+class BaoCaoAdmin(admin.ModelAdmin):
+    list_display = [
+        "nguoi_dung",
+        "loai",
+        "bai_review",
+        "trang_thai",
+        "ngay_tao",
+    ]
+    list_filter = ["loai", "trang_thai", "ngay_tao"]
+    search_fields = [
+        "noi_dung",
+        "nguoi_dung__username",
+        "bai_review__tieu_de",
+    ]
+    readonly_fields = ["nguoi_dung", "ngay_tao", "ngay_cap_nhat"]
+    list_per_page = 25
+    actions = ["danh_dau_da_xu_ly", "danh_dau_bo_qua"]
+
+    @admin.action(description="Đánh dấu đã xử lý")
+    def danh_dau_da_xu_ly(self, request, queryset):
+        so_ban_ghi = queryset.update(trang_thai=BaoCao.TrangThai.DA_XU_LY)
+        self.message_user(request, f"Đã đánh dấu xử lý {so_ban_ghi} báo cáo.")
+
+    @admin.action(description="Bỏ qua các báo cáo đã chọn")
+    def danh_dau_bo_qua(self, request, queryset):
+        so_ban_ghi = queryset.update(trang_thai=BaoCao.TrangThai.BO_QUA)
+        self.message_user(request, f"Đã bỏ qua {so_ban_ghi} báo cáo.")

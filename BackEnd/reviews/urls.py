@@ -12,7 +12,7 @@ from . import views
 
 router = DefaultRouter()
 
-# Đăng ký 10 endpoint tương ứng 10 bảng nghiệp vụ
+# Đăng ký 11 endpoint tương ứng 11 bảng nghiệp vụ
 router.register("nguoi-dung", views.NguoiDungViewSet, basename="nguoi-dung")
 router.register("nha-hang", views.NhaHangViewSet, basename="nha-hang")
 router.register("the-mon-an", views.TheMonAnViewSet, basename="the-mon-an")
@@ -23,6 +23,7 @@ router.register("binh-luan", views.BinhLuanViewSet, basename="binh-luan")
 router.register("luot-thich", views.LuotThichViewSet, basename="luot-thich")
 router.register("quan-yeu-thich", views.QuanYeuThichViewSet, basename="quan-yeu-thich")
 router.register("theo-doi", views.TheoDoiViewSet, basename="theo-doi")
+router.register("bao-cao", views.BaoCaoViewSet, basename="bao-cao")
 
 urlpatterns = [
     path("csrf/", views.CsrfView.as_view(), name="csrf"),

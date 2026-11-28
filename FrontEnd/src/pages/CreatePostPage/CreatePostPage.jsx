@@ -478,8 +478,7 @@ export default function CreatePostPage() {
             Kể lại <em>bữa ăn</em> của bạn
           </h1>
           <p>
-            Một review chân thành có thể giúp ai đó tìm được quán ngon. Bài viết
-            được lưu vào BackEnd và hiển thị ngay trên Feed của bạn.
+            Một review chân thành có thể giúp ai đó tìm được quán ngon.
           </p>
         </header>
 

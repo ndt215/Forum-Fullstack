@@ -16,15 +16,17 @@ Tài khoản demo sau khi chạy:
     - maichi   / MamMam123!
 """
 
-from datetime import time
+from datetime import time, timedelta
 from pathlib import Path
 import shutil
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from reviews.models import (
     BaiReview,
+    BaoCao,
     BinhLuan,
     ChamDiem,
     HinhAnh,
@@ -361,6 +363,77 @@ QUAN_YEU_THICH_MAU = [
     ("hainam", "Bé Mặn"),
 ]
 
+# Hai bài dưới đây minh hoạ luồng kiểm duyệt cho trang cá nhân:
+# một bài đang chờ duyệt, một bài bị quản trị viên từ chối kèm lý do.
+BAI_REVIEW_CHO_DUYET_MAU = [
+    {
+        "nha_hang": "Cơm Tấm Ba Ghiền",
+        "nguoi_dung": "ngoctran",
+        "tieu_de": "Cơm tấm Ba Ghiền: đĩa cơm đầy đặn cho buổi trưa Sài Gòn",
+        "noi_dung": (
+            "Mình ghé Ba Ghiền vào một trưa giữa tuần. Quán đông nhưng bàn xoay "
+            "nhanh, khoảng 10 phút là có chỗ.\n\n"
+            "Sườn nướng mềm, thấm vị, cơm tấm dẻo và mỡ hành thơm. Giá 95.000đ một "
+            "đĩa đầy đủ, ăn no đến chiều.\n\n"
+            "Điểm trừ là chỗ để xe hơi chật, đi xe máy sẽ tiện hơn."
+        ),
+        "video_url": "",
+        "the": ["Cơm tấm", "Sườn nướng"],
+        "anh": ["com-tam.jpg"],
+        "cham_diem": [],
+        "thich": [],
+        "binh_luan": [],
+        "trang_thai": "cho_duyet",
+        "ngay_tao_cach_day": 2,
+    },
+    {
+        "nha_hang": "Phở Thìn Lò Đúc",
+        "nguoi_dung": "ngoctran",
+        "tieu_de": "Thử lại Phở Thìn Lò Đúc lần hai: vẫn đáng xếp hàng",
+        "noi_dung": (
+            "Lần này mình quay lại Phở Thìn vào một sáng chủ nhật. Quán vẫn đông, "
+            "nước dùng vẫn trong và ngọt thanh.\n\n"
+            "Bát phở 70.000đ, thịt bò xào tái mềm. Điều mình thích nhất là cảm giác "
+            "cả quán cùng ăn sáng thật nhanh rồi toả đi làm."
+        ),
+        "video_url": "",
+        "the": ["Phở bò", "Ăn sáng"],
+        "anh": ["pho.jpg"],
+        "cham_diem": [],
+        "thich": [],
+        "binh_luan": [],
+        "trang_thai": "bi_tu_choi",
+        "ly_do_tu_choi": (
+            "Nội dung trùng với bài đã đăng trước đó. Vui lòng bổ sung trải nghiệm "
+            "mới hoặc thông tin khác biệt rồi gửi duyệt lại."
+        ),
+        "ngay_tao_cach_day": 5,
+    },
+]
+
+BAO_CAO_MAU = [
+    {
+        "nguoi_dung": "maichi",
+        "bai_review": "Bé Mặn Đà Nẵng: bữa hải sản ven biển đáng từng đồng",
+        "loai": "noi_dung",
+        "noi_dung": (
+            "Bài viết có phần khen quán quá mức và nghi là quảng cáo. Nhờ quản trị "
+            "viên kiểm tra lại giúp."
+        ),
+        "trang_thai": "moi",
+    },
+    {
+        "nguoi_dung": "hainam",
+        "bai_review": None,
+        "loai": "loi_giao_dien",
+        "noi_dung": (
+            "Trên điện thoại, ảnh bìa ở trang chi tiết bài review bị cắt mất một "
+            "phần. Nhờ kiểm tra lại giúp."
+        ),
+        "trang_thai": "dang_xu_ly",
+    },
+]
+
 THEO_DOI_MAU = [
     ("ngoctran", "minhanh"),
     ("minhanh", "ngoctran"),
@@ -389,6 +462,7 @@ class Command(BaseCommand):
             thu_muc_reviews,
         )
         self._tao_tuong_tac(nguoi_dung, nha_hang, bai_review)
+        self._tao_bao_cao(nguoi_dung, bai_review)
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS("=== ĐÃ TẠO DỮ LIỆU MẪU ==="))
@@ -400,6 +474,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Hình ảnh   : {HinhAnh.objects.count()}")
         self.stdout.write(f"Bình luận  : {BinhLuan.objects.count()}")
         self.stdout.write(f"Lượt thích : {LuotThich.objects.count()}")
+        self.stdout.write(f"Báo cáo    : {BaoCao.objects.count()}")
         self.stdout.write("")
         self.stdout.write("Tài khoản demo:")
         self.stdout.write("  admin    / admin123")
@@ -491,7 +566,7 @@ class Command(BaseCommand):
     def _tao_bai_review(self, nguoi_dung, nha_hang, the_mon_an, thu_muc_reviews):
         ket_qua = {}
 
-        for du_lieu in BAI_REVIEW_MAU:
+        for du_lieu in BAI_REVIEW_MAU + BAI_REVIEW_CHO_DUYET_MAU:
             tac_gia = nguoi_dung[du_lieu["nguoi_dung"]]
             quan = nha_hang[du_lieu["nha_hang"]]
 
@@ -502,7 +577,8 @@ class Command(BaseCommand):
                 defaults={
                     "noi_dung": du_lieu["noi_dung"],
                     "video_url": du_lieu.get("video_url") or None,
-                    "trang_thai": BaiReview.TrangThai.DA_DANG,
+                    "trang_thai": du_lieu.get("trang_thai", "da_dang"),
+                    "ly_do_tu_choi": du_lieu.get("ly_do_tu_choi", ""),
                 },
             )
 
@@ -510,6 +586,15 @@ class Command(BaseCommand):
                 bai.the_mon_an.set(
                     [the_mon_an[ten] for ten in du_lieu["the"] if ten in the_mon_an]
                 )
+
+                # Lùi ngày tạo để bài chờ duyệt / bị từ chối không chiếm đầu Feed.
+                so_ngay = du_lieu.get("ngay_tao_cach_day")
+                if so_ngay:
+                    BaiReview.objects.filter(pk=bai.pk).update(
+                        ngay_tao=timezone.now() - timedelta(days=so_ngay)
+                    )
+                    bai.refresh_from_db()
+
                 self.stdout.write(f"  + Bài review: {bai.tieu_de}")
 
             # Ảnh (chỉ tạo nếu bài chưa có ảnh)
@@ -587,3 +672,23 @@ class Command(BaseCommand):
                 nguoi_theo_doi=nguoi_dung[nguoi_theo_doi],
                 nguoi_duoc_theo_doi=nguoi_dung[nguoi_duoc_theo_doi],
             )
+
+    # ------------------------------------------------------------------
+    # Báo cáo gửi quản trị viên
+    # ------------------------------------------------------------------
+    def _tao_bao_cao(self, nguoi_dung, bai_review):
+        for du_lieu in BAO_CAO_MAU:
+            tieu_de = du_lieu.get("bai_review")
+
+            bao_cao, vua_tao = BaoCao.objects.get_or_create(
+                nguoi_dung=nguoi_dung[du_lieu["nguoi_dung"]],
+                bai_review=bai_review.get(tieu_de) if tieu_de else None,
+                loai=du_lieu["loai"],
+                noi_dung=du_lieu["noi_dung"],
+                defaults={"trang_thai": du_lieu.get("trang_thai", "moi")},
+            )
+
+            if vua_tao:
+                ten_nguoi = du_lieu["nguoi_dung"]
+                nhan = tieu_de or "báo lỗi chung"
+                self.stdout.write(f"  + Báo cáo: {ten_nguoi} → {nhan}")

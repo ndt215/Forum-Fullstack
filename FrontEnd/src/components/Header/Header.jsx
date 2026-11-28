@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
+  Flag,
   Loader2,
   LogIn,
   LogOut,
@@ -9,6 +10,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import ReportModal from "../ReportModal/ReportModal";
 import { initials } from "../../utils/format";
 import styles from "./Header.module.css";
 
@@ -22,6 +24,7 @@ const navItems = [
 export default function Header() {
   const { user, isAuthenticated, dangKhoiTao, logout } = useAuth();
   const [dangXuat, setDangXuat] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   async function xuLyDangXuat() {
     setDangXuat(true);
@@ -97,6 +100,16 @@ export default function Header() {
 
               <button
                 type="button"
+                className={styles.reportButton}
+                onClick={() => setReportOpen(true)}
+                title="Báo lỗi / tố cáo tới quản trị viên"
+                aria-label="Báo lỗi hoặc tố cáo tới quản trị viên"
+              >
+                <Flag size={15} aria-hidden="true" />
+              </button>
+
+              <button
+                type="button"
                 className={styles.logoutButton}
                 onClick={xuLyDangXuat}
                 disabled={dangXuat}
@@ -112,11 +125,11 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link className={styles.loginLink} to="/?auth=dang-nhap">
+              <Link className={styles.loginLink} to="/dang-nhap">
                 <LogIn size={15} aria-hidden="true" />
                 Đăng nhập
               </Link>
-              <Link className={styles.cta} to="/?auth=dang-ky">
+              <Link className={styles.cta} to="/dang-ky">
                 <UserPlus size={15} aria-hidden="true" />
                 Đăng ký
               </Link>
@@ -124,6 +137,11 @@ export default function Header() {
           )}
         </div>
       </div>
+
+      <ReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+      />
     </header>
   );
 }

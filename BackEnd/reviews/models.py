@@ -1,5 +1,5 @@
 """
-Định nghĩa 10 bảng (Model) cho hệ thống Măm Măm Food Review.
+Định nghĩa 11 bảng (Model) cho hệ thống Măm Măm Food Review.
 
 Quy ước chung:
 - Dùng tiếng Việt có dấu trong verbose_name để trang Admin hiển thị đẹp.
@@ -209,6 +209,7 @@ class BaiReview(models.Model):
     class TrangThai(models.TextChoices):
         CHO_DUYET = "cho_duyet", "Chờ duyệt"
         DA_DANG = "da_dang", "Đã đăng"
+        BI_TU_CHOI = "bi_tu_choi", "Bị từ chối"
         AN = "an", "Ẩn"
 
     nguoi_dung = models.ForeignKey(
@@ -243,6 +244,13 @@ class BaiReview(models.Model):
         max_length=20,
         choices=TrangThai.choices,
         default=TrangThai.CHO_DUYET,
+    )
+    # [MOI] Quản trị viên nhập lý do khi từ chối bài, tác giả xem được ở
+    # trang cá nhân (mục "Đang được duyệt") và ở trang chi tiết bài viết.
+    ly_do_tu_choi = models.TextField(
+        "Lý do từ chối",
+        blank=True,
+        help_text="Quản trị viên nhập lý do khi từ chối bài viết.",
     )
     luot_thich = models.PositiveIntegerField(
         "Lượt thích",
@@ -561,3 +569,72 @@ class TheoDoi(models.Model):
 
     def __str__(self):
         return f"{self.nguoi_theo_doi} theo dõi {self.nguoi_duoc_theo_doi}"
+
+
+# ===========================================================================
+# 11. BÁO CÁO GỬI QUẢN TRỊ VIÊN
+# Người dùng gửi báo cáo khi thấy nội dung cần tố cáo hoặc khi gặp lỗi
+# (giao diện / dữ liệu). Quản trị viên xử lý và ghi lại phản hồi.
+# ===========================================================================
+class BaoCao(models.Model):
+    """Một báo cáo (tố cáo nội dung hoặc báo lỗi) do người dùng gửi."""
+
+    class Loai(models.TextChoices):
+        NOI_DUNG = "noi_dung", "Tố cáo nội dung"
+        LOI_GIAO_DIEN = "loi_giao_dien", "Báo lỗi giao diện"
+        LOI_DU_LIEU = "loi_du_lieu", "Báo lỗi dữ liệu"
+        KHAC = "khac", "Khác"
+
+    class TrangThai(models.TextChoices):
+        MOI = "moi", "Mới"
+        DANG_XU_LY = "dang_xu_ly", "Đang xử lý"
+        DA_XU_LY = "da_xu_ly", "Đã xử lý"
+        BO_QUA = "bo_qua", "Bỏ qua"
+
+    nguoi_dung = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="bao_cao",
+        verbose_name="Người gửi",
+    )
+    # Báo cáo có thể gắn với một bài review cụ thể, hoặc là báo lỗi chung.
+    bai_review = models.ForeignKey(
+        BaiReview,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="bao_cao",
+        verbose_name="Bài review bị báo cáo",
+    )
+    loai = models.CharField(
+        "Loại báo cáo",
+        max_length=20,
+        choices=Loai.choices,
+        default=Loai.NOI_DUNG,
+    )
+    noi_dung = models.TextField(
+        "Nội dung báo cáo",
+        help_text="Mô tả càng cụ thể càng giúp quản trị viên xử lý nhanh.",
+    )
+    trang_thai = models.CharField(
+        "Trạng thái xử lý",
+        max_length=20,
+        choices=TrangThai.choices,
+        default=TrangThai.MOI,
+    )
+    phan_hoi = models.TextField(
+        "Phản hồi của quản trị viên",
+        blank=True,
+        help_text="Ghi lại cách xử lý để lưu vết.",
+    )
+    ngay_tao = models.DateTimeField("Ngày gửi", auto_now_add=True)
+    ngay_cap_nhat = models.DateTimeField("Ngày cập nhật", auto_now=True)
+
+    class Meta:
+        verbose_name = "Báo cáo"
+        verbose_name_plural = "Báo cáo gửi quản trị viên"
+        ordering = ["-ngay_tao"]
+
+    def __str__(self):
+        dich = self.bai_review.tieu_de if self.bai_review else "báo lỗi chung"
+        return f"{self.nguoi_dung} → {dich} ({self.get_loai_display()})"

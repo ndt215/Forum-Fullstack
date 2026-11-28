@@ -40,6 +40,7 @@ from rest_framework.views import APIView
 
 from .models import (
     BaiReview,
+    BaoCao,
     BinhLuan,
     ChamDiem,
     HinhAnh,
@@ -52,6 +53,7 @@ from .models import (
 )
 from .serializers import (
     BaiReviewSerializer,
+    BaoCaoSerializer,
     BinhLuanSerializer,
     ChamDiemSerializer,
     HinhAnhSerializer,
@@ -163,6 +165,10 @@ class BaiReviewViewSet(viewsets.ModelViewSet):
             /api/bai-review/?nha_hang=1
             /api/bai-review/?nguoi_dung=2
             /api/bai-review/?trang_thai=da_dang
+
+        Ghi chú: thành viên luôn thấy bài của chính mình ở mọi trạng thái (để
+        trang cá nhân hiển thị bài chờ duyệt / bị từ chối). Vì vậy Feed và
+        trang chủ phải gửi kèm ?trang_thai=da_dang nếu chỉ muốn bài đã duyệt.
         """
         queryset = super().get_queryset()
         user = self.request.user
@@ -238,10 +244,39 @@ class BaiReviewViewSet(viewsets.ModelViewSet):
         permission_classes=[LaQuanTriVien],
     )
     def duyet(self, request, pk=None):
+        """Duyệt bài: chuyển sang đã đăng và xoá lý do từ chối (nếu có)."""
         bai = self.get_object()
         bai.trang_thai = BaiReview.TrangThai.DA_DANG
-        bai.save(update_fields=["trang_thai"])
+        bai.ly_do_tu_choi = ""
+        bai.save(update_fields=["trang_thai", "ly_do_tu_choi"])
         return Response({"trang_thai": bai.trang_thai})
+
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[LaQuanTriVien],
+    )
+    def tu_choi(self, request, pk=None):
+        """
+        POST /api/bai-review/{id}/tu_choi/  {"ly_do_tu_choi": "..."}
+
+        Từ chối bài viết và lưu lý do để tác giả thấy ở trang cá nhân.
+        """
+        bai = self.get_object()
+        ly_do = (request.data.get("ly_do_tu_choi") or "").strip()
+
+        bai.trang_thai = BaiReview.TrangThai.BI_TU_CHOI
+        bai.ly_do_tu_choi = ly_do or (
+            "Bài viết chưa phù hợp với tiêu chuẩn cộng đồng Măm Măm."
+        )
+        bai.save(update_fields=["trang_thai", "ly_do_tu_choi"])
+
+        return Response(
+            {
+                "trang_thai": bai.trang_thai,
+                "ly_do_tu_choi": bai.ly_do_tu_choi,
+            }
+        )
 
 
 # ===========================================================================
@@ -458,13 +493,51 @@ class TheoDoiViewSet(viewsets.ModelViewSet):
 
 
 # ===========================================================================
+# BÁO CÁO GỬI QUẢN TRỊ VIÊN
+# ===========================================================================
+class BaoCaoViewSet(viewsets.ModelViewSet):
+    """
+    Người dùng gửi báo cáo (tố cáo nội dung hoặc báo lỗi) cho quản trị viên.
+
+        POST /api/bao-cao/            -> gửi báo cáo mới
+        GET  /api/bao-cao/            -> thành viên xem báo cáo của mình,
+                                         quản trị viên xem tất cả
+        PATCH/DELETE /api/bao-cao/{id}/ -> chỉ quản trị viên (xử lý / xoá)
+    """
+
+    queryset = BaoCao.objects.select_related("nguoi_dung", "bai_review")
+    serializer_class = BaoCaoSerializer
+
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS or self.action == "create":
+            return [IsAuthenticated()]
+        return [LaQuanTriVien()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if la_quan_tri(self.request.user):
+            return queryset
+
+        # Thành viên chỉ thấy báo cáo do chính mình gửi.
+        return queryset.filter(nguoi_dung=self.request.user)
+
+    def perform_create(self, serializer):
+        # Người gửi và trạng thái luôn do server quyết định.
+        serializer.save(
+            nguoi_dung=self.request.user,
+            trang_thai=BaoCao.TrangThai.MOI,
+        )
+
+
+# ===========================================================================
 # ENDPOINT TỔNG QUAN (dễ kiểm tra API đã chạy hay chưa)
 # ===========================================================================
 class TongQuanView(APIView):
     """
     GET /api/tong-quan/
 
-    Trả về số lượng bản ghi của 10 bảng, giúp người mới kiểm tra nhanh
+    Trả về số lượng bản ghi của 11 bảng, giúp người mới kiểm tra nhanh
     dữ liệu mẫu sau khi chạy migrate.
     """
     permission_classes = [LaQuanTriVien]
@@ -481,6 +554,7 @@ class TongQuanView(APIView):
             "luot_thich": LuotThich.objects.count(),
             "quan_yeu_thich": QuanYeuThich.objects.count(),
             "theo_doi": TheoDoi.objects.count(),
+            "bao_cao": BaoCao.objects.count(),
         }
 
         return Response(

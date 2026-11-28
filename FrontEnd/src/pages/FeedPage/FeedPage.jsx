@@ -11,7 +11,12 @@ import {
   UtensilsCrossed,
 } from 'lucide-react';
 import ReviewCard from '../../components/ReviewCard/ReviewCard';
-import { layDanhSachBaiReview } from '../../api/reviews';
+import {
+  boLuuQuanYeuThich,
+  layDanhSachBaiReview,
+  layQuanYeuThich,
+  luuQuanYeuThich,
+} from '../../api/reviews';
 import { baiReviewToCard } from '../../utils/adapters';
 import styles from './FeedPage.module.css';
 
@@ -32,6 +37,12 @@ const sortOptions = [
 
 const PAGE_SIZE = 9;
 
+/**
+ * Feed chỉ hiển thị bài đã được duyệt. Bài đang chờ duyệt hoặc đã bị từ chối
+ * chỉ nằm ở trang cá nhân (tab "Đang duyệt") của chính tác giả.
+ */
+const TRANG_THAI_HIEN_THI = 'da_dang';
+
 export default function FeedPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -44,6 +55,61 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const [savedMap, setSavedMap] = useState({});
+  const [saveLoadingId, setSaveLoadingId] = useState(null);
+  const [saveNote, setSaveNote] = useState('');
+
+  // Quán đã lưu của người dùng: { [nha_hang_id]: quan_yeu_thich_id }
+  useEffect(() => {
+    let ignore = false;
+
+    layQuanYeuThich()
+      .then((data) => {
+        if (ignore) return;
+
+        const banDo = {};
+        (data?.results || []).forEach((muc) => {
+          banDo[muc.nha_hang] = muc.id;
+        });
+        setSavedMap(banDo);
+      })
+      .catch(() => {
+        if (!ignore) setSavedMap({});
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  async function xuLyLuuQuan(nhaHangId) {
+    if (!nhaHangId || saveLoadingId) return;
+
+    const daLuuId = savedMap[nhaHangId];
+
+    setSaveLoadingId(nhaHangId);
+    setSaveNote('');
+
+    try {
+      if (daLuuId) {
+        await boLuuQuanYeuThich(daLuuId);
+        setSavedMap((truoc) => {
+          const sau = { ...truoc };
+          delete sau[nhaHangId];
+          return sau;
+        });
+        setSaveNote('Đã bỏ lưu quán khỏi bộ sưu tập.');
+      } else {
+        const moi = await luuQuanYeuThich(nhaHangId);
+        setSavedMap((truoc) => ({ ...truoc, [nhaHangId]: moi.id }));
+        setSaveNote('Đã lưu quán vào bộ sưu tập của bạn.');
+      }
+    } catch (loi) {
+      setSaveNote(loi.message || 'Không cập nhật được quán yêu thích.');
+    } finally {
+      setSaveLoadingId(null);
+    }
+  }
 
   // Gõ tìm kiếm -> chờ 350ms rồi mới gọi API.
   useEffect(() => {
@@ -63,6 +129,7 @@ export default function FeedPage() {
       search,
       loai_am_thuc: cuisine,
       ordering,
+      trang_thai: TRANG_THAI_HIEN_THI,
       page: 1,
       page_size: PAGE_SIZE,
     })
@@ -99,6 +166,7 @@ export default function FeedPage() {
         search,
         loai_am_thuc: cuisine,
         ordering,
+        trang_thai: TRANG_THAI_HIEN_THI,
         page: nextPage,
         page_size: PAGE_SIZE,
       });
@@ -190,12 +258,14 @@ export default function FeedPage() {
             <UtensilsCrossed size={14} aria-hidden="true" />
             {loading ? 'Đang tải bài review…' : `${count} bài review`}
           </span>
-          <span>
-            {dangLoc
-              ? 'Kết quả theo bộ lọc đang chọn'
-              : 'Nối trực tiếp với BackEnd Django'}
-          </span>
+          {dangLoc && <span>Kết quả theo bộ lọc đang chọn</span>}
         </div>
+
+        {saveNote && (
+          <p className={styles.saveNote} role="status">
+            {saveNote}
+          </p>
+        )}
 
         {error && (
           <div className={styles.stateBox} role="alert">
@@ -236,7 +306,16 @@ export default function FeedPage() {
             {items.length > 0 && (
               <div className={styles.grid}>
                 {items.map((review) => (
-                  <ReviewCard key={review.id} {...baiReviewToCard(review)} />
+                  <ReviewCard
+                    key={review.id}
+                    {...baiReviewToCard(review)}
+                    saved={Boolean(savedMap[review.nha_hang])}
+                    saveLoading={saveLoadingId === review.nha_hang}
+                    // Feed không hiện nút "Lưu quán"; chỉ hiện nút "bỏ lưu"
+                    // ở những thẻ mà người dùng đã lưu từ trang chi tiết.
+                    allowSave={false}
+                    onToggleSave={() => xuLyLuuQuan(review.nha_hang)}
+                  />
                 ))}
               </div>
             )}

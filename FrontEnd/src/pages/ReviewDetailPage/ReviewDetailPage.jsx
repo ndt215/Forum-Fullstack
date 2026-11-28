@@ -6,6 +6,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Clock,
+  Flag,
   Flame,
   Heart,
   Loader2,
@@ -23,6 +24,7 @@ import {
 } from "lucide-react";
 import RatingStars from "../../components/RatingStars/RatingStars";
 import StarPicker from "../../components/StarPicker/StarPicker";
+import ReportModal from "../../components/ReportModal/ReportModal";
 import { useAuth } from "../../context/AuthContext";
 import {
   boLuuQuanYeuThich,
@@ -122,6 +124,7 @@ export default function ReviewDetailPage() {
   const [followEntry, setFollowEntry] = useState(null);
   const [followLoading, setFollowLoading] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
 
   const [commentText, setCommentText] = useState("");
   const [commentError, setCommentError] = useState("");
@@ -247,7 +250,7 @@ export default function ReviewDetailPage() {
   /* ---------------------------------------------------------------- */
   function yeuCauDangNhap() {
     const next = encodeURIComponent(`/review/${id}`);
-    navigate(`/?auth=dang-nhap&next=${next}`);
+    navigate(`/dang-nhap?next=${next}`);
   }
 
   async function xuLyThich() {
@@ -547,6 +550,16 @@ export default function ReviewDetailPage() {
                 )}
                 {savedEntry ? "Đã lưu quán" : "Lưu quán"}
               </button>
+
+              <button
+                type="button"
+                className={styles.actionButton}
+                onClick={() => setReportOpen(true)}
+                title="Báo cáo bài viết này tới quản trị viên"
+              >
+                <Flag size={15} aria-hidden="true" />
+                Báo cáo
+              </button>
             </span>
           </div>
 
@@ -554,6 +567,16 @@ export default function ReviewDetailPage() {
             <p className={styles.statusNotice}>
               <Clock size={13} aria-hidden="true" />
               Bài viết đang chờ duyệt — chỉ bạn và quản trị viên nhìn thấy.
+            </p>
+          )}
+
+          {review.trang_thai === "bi_tu_choi" && (
+            <p className={`${styles.statusNotice} ${styles.statusRejected}`}>
+              <AlertCircle size={13} aria-hidden="true" />
+              Bài viết bị từ chối.
+              {review.ly_do_tu_choi
+                ? ` Lý do: ${review.ly_do_tu_choi}`
+                : " Vui lòng liên hệ quản trị viên để biết thêm chi tiết."}
             </p>
           )}
 
@@ -697,7 +720,6 @@ export default function ReviewDetailPage() {
                     Thảo luận <span>({soBinhLuan})</span>
                   </h2>
                 </div>
-                <p>Bình luận được lưu trực tiếp vào BackEnd.</p>
               </div>
 
               {commentsLoading ? (
@@ -787,7 +809,7 @@ export default function ReviewDetailPage() {
                 </form>
               ) : (
                 <p className={styles.commentPrompt}>
-                  <Link to={`/?auth=dang-nhap&next=${encodeURIComponent(`/review/${id}`)}`}>
+                  <Link to={`/dang-nhap?next=${encodeURIComponent(`/review/${id}`)}`}>
                     Đăng nhập
                   </Link>{" "}
                   để tham gia thảo luận cùng cộng đồng Măm Măm.
@@ -892,7 +914,7 @@ export default function ReviewDetailPage() {
 
             {!isAuthenticated && (
               <p className={styles.loginHint}>
-                <Link to={`/?auth=dang-nhap&next=${encodeURIComponent(`/review/${id}`)}`}>
+                <Link to={`/dang-nhap?next=${encodeURIComponent(`/review/${id}`)}`}>
                   Đăng nhập
                 </Link>{" "}
                 để chấm điểm và bình luận bài review này.
@@ -1020,6 +1042,13 @@ export default function ReviewDetailPage() {
           </aside>
         </div>
       </div>
+
+      <ReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        baiReviewId={review.id}
+        tieuDe={review.tieu_de}
+      />
     </div>
   );
 }

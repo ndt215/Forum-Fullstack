@@ -14,6 +14,7 @@ from rest_framework import serializers
 
 from .models import (
     BaiReview,
+    BaoCao,
     BinhLuan,
     ChamDiem,
     HinhAnh,
@@ -360,6 +361,7 @@ class BaiReviewSerializer(serializers.ModelSerializer):
             "diem_trung_binh",
             "trang_thai",
             "trang_thai_hien_thi",
+            "ly_do_tu_choi",
             "luot_thich",
             "da_thich",
             "so_binh_luan",
@@ -377,6 +379,7 @@ class BaiReviewSerializer(serializers.ModelSerializer):
             # [SUA] Không cho client tự đổi chủ bài / tự duyệt bài
             "nguoi_dung",
             "trang_thai",
+            "ly_do_tu_choi",
             "diem_trung_binh",
             "luot_thich",
             "ngay_tao",
@@ -517,6 +520,85 @@ class TheoDoiSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Bạn không thể tự theo dõi chính mình."
             )
+        return attrs
+
+
+# ===========================================================================
+# BÁO CÁO GỬI QUẢN TRỊ VIÊN
+# ===========================================================================
+class BaoCaoSerializer(serializers.ModelSerializer):
+    """Người dùng gửi báo cáo; quản trị viên đọc và cập nhật trạng thái."""
+
+    ten_nguoi_dung = serializers.CharField(
+        source="nguoi_dung.username",
+        read_only=True,
+    )
+    ten_bai_review = serializers.CharField(
+        source="bai_review.tieu_de",
+        read_only=True,
+    )
+    loai_hien_thi = serializers.CharField(
+        source="get_loai_display",
+        read_only=True,
+    )
+    trang_thai_hien_thi = serializers.CharField(
+        source="get_trang_thai_display",
+        read_only=True,
+    )
+
+    class Meta:
+        model = BaoCao
+        fields = [
+            "id",
+            "nguoi_dung",
+            "ten_nguoi_dung",
+            "bai_review",
+            "ten_bai_review",
+            "loai",
+            "loai_hien_thi",
+            "noi_dung",
+            "trang_thai",
+            "trang_thai_hien_thi",
+            "phan_hoi",
+            "ngay_tao",
+            "ngay_cap_nhat",
+        ]
+        read_only_fields = [
+            "id",
+            "nguoi_dung",
+            "ten_nguoi_dung",
+            "ten_bai_review",
+            "loai_hien_thi",
+            "trang_thai_hien_thi",
+            "ngay_tao",
+            "ngay_cap_nhat",
+        ]
+
+    def validate_noi_dung(self, gia_tri):
+        """Nội dung báo cáo cần đủ rõ ràng để quản trị viên xử lý."""
+        if len(gia_tri.strip()) < 10:
+            raise serializers.ValidationError(
+                "Vui lòng mô tả chi tiết hơn (ít nhất 10 ký tự)."
+            )
+        return gia_tri.strip()
+
+    def validate(self, attrs):
+        """Không cho gửi trùng một báo cáo đang chờ xử lý cho cùng bài."""
+        request = self.context.get("request")
+        bai_review = attrs.get("bai_review")
+
+        if request and bai_review and request.user.is_authenticated:
+            da_gui = BaoCao.objects.filter(
+                nguoi_dung=request.user,
+                bai_review=bai_review,
+                trang_thai=BaoCao.TrangThai.MOI,
+            ).exists()
+
+            if da_gui:
+                raise serializers.ValidationError(
+                    "Bạn đã gửi báo cáo cho bài viết này và đang chờ xử lý."
+                )
+
         return attrs
 
 #   -------
