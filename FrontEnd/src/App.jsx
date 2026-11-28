@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import AuthProvider from "./context/AuthProvider";
 import { useAuth } from "./context/AuthContext";
 import Header from "./components/Header/Header";
+import Footer from "./components/Footer/Footer";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import GuestRoute from "./components/ProtectedRoute/GuestRoute";
 import AuthPage from "./pages/AuthPage/AuthPage";
@@ -49,6 +50,7 @@ function MainLayout() {
       <main>
         <Outlet />
       </main>
+      <Footer />
     </>
   );
 }
