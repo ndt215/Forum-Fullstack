@@ -232,6 +232,12 @@ class BaiReviewSerializer(serializers.ModelSerializer):
         source="nguoi_dung.username",
         read_only=True,
     )
+    # Họ tên hiển thị (người dùng tự sửa ở trang cá nhân). Client ưu tiên
+    # trường này, nếu trống thì quay về username.
+    ho_ten_nguoi_dung = serializers.CharField(
+        source="nguoi_dung.ho_ten",
+        read_only=True,
+    )
     avatar_nguoi_dung = serializers.SerializerMethodField()
     tieu_su_nguoi_dung = serializers.CharField(
         source="nguoi_dung.tieu_su",
@@ -343,6 +349,7 @@ class BaiReviewSerializer(serializers.ModelSerializer):
             "id",
             "nguoi_dung",
             "ten_nguoi_dung",
+            "ho_ten_nguoi_dung",
             "avatar_nguoi_dung",
             "tieu_su_nguoi_dung",
             "nha_hang",
@@ -395,6 +402,11 @@ class BinhLuanSerializer(serializers.ModelSerializer):
         source="nguoi_dung.username",
         read_only=True,
     )
+    # Họ tên hiển thị của người bình luận (client ưu tiên, trống thì dùng username).
+    ho_ten_nguoi_dung = serializers.CharField(
+        source="nguoi_dung.ho_ten",
+        read_only=True,
+    )
     avatar_nguoi_dung = serializers.SerializerMethodField()
 
     def get_avatar_nguoi_dung(self, obj):
@@ -408,6 +420,7 @@ class BinhLuanSerializer(serializers.ModelSerializer):
             "bai_review",
             "nguoi_dung",
             "ten_nguoi_dung",
+            "ho_ten_nguoi_dung",
             "avatar_nguoi_dung",
             "noi_dung",
             "luot_thich",
@@ -492,6 +505,7 @@ class QuanYeuThichSerializer(serializers.ModelSerializer):
                 "so_binh_luan": bai.binh_luan.count(),
                 "ngay_tao": bai.ngay_tao,
                 "ten_nguoi_dung": bai.nguoi_dung.username,
+                "ho_ten_nguoi_dung": bai.nguoi_dung.ho_ten,
                 "avatar_nguoi_dung": bai.nguoi_dung.anh_dai_dien.url
                 if bai.nguoi_dung.anh_dai_dien
                 else None,

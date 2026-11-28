@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AlertCircle, CheckCircle2, Flag, Loader2, X } from "lucide-react";
 import { guiBaoCao } from "../../api/reports";
 import styles from "./ReportModal.module.css";
@@ -30,7 +31,7 @@ export default function ReportModal({
   baiReviewId = null,
   tieuDe = "",
 }) {
-  // Đóng bằng phím Esc.
+  // Đóng bằng phím Esc và khoá cuộn trang phía sau khi hộp thoại đang mở.
   useEffect(() => {
     if (!open) return undefined;
 
@@ -38,13 +39,21 @@ export default function ReportModal({
       if (event.key === "Escape") onClose?.();
     }
 
+    const cuonTruocDo = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", xuLyPhim);
-    return () => window.removeEventListener("keydown", xuLyPhim);
+
+    return () => {
+      document.body.style.overflow = cuonTruocDo;
+      window.removeEventListener("keydown", xuLyPhim);
+    };
   }, [open, onClose]);
 
   if (!open) return null;
 
-  return (
+  // Dựng hộp thoại trực tiếp trong <body> để không bị khung chứa của header
+  // (header có backdrop-filter) nhốt `position: fixed` vào thanh điều hướng.
+  return createPortal(
     <div
       className={styles.backdrop}
       onMouseDown={(event) => {
@@ -78,7 +87,8 @@ export default function ReportModal({
           tieuDe={tieuDe}
         />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

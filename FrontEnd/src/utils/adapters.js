@@ -1,5 +1,5 @@
 import anhDuPhong from "../assets/img/restaurant.jpg";
-import { cuisineLabel, formatRelativeTime, truncate } from "./format";
+import { cuisineLabel, displayName, formatRelativeTime, truncate } from "./format";
 
 /** Chuyển dữ liệu bài review của API thành props cho <ReviewCard />. */
 export function baiReviewToCard(review) {
@@ -20,7 +20,8 @@ export function baiReviewToCard(review) {
     price: review.khoang_gia,
     rating: diem,
     tags: (review.danh_sach_the || []).map((the) => the.ten_the),
-    author: review.ten_nguoi_dung,
+    // Ưu tiên họ tên (sửa được ở trang cá nhân), chưa đặt thì dùng username.
+    author: displayName(review.ho_ten_nguoi_dung, review.ten_nguoi_dung),
     avatar: review.avatar_nguoi_dung,
     time: formatRelativeTime(review.ngay_tao),
     likes: luotThich,
@@ -54,7 +55,7 @@ export function quanYeuThichToCard(muc) {
     price: quan.khoang_gia,
     rating: Number(bai.diem_trung_binh) || 0,
     tags: bai.tags || [],
-    author: bai.ten_nguoi_dung || '',
+    author: displayName(bai.ho_ten_nguoi_dung, bai.ten_nguoi_dung),
     avatar: bai.avatar_nguoi_dung || null,
     time: bai.ngay_tao ? formatRelativeTime(bai.ngay_tao) : '',
     likes: bai.luot_thich || 0,

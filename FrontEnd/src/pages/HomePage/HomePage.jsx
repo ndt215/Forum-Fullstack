@@ -5,6 +5,7 @@ import RatingStars from "../../components/RatingStars/RatingStars";
 import { layDanhSachBaiReview } from "../../api/reviews";
 import { layNhaHang } from "../../api/catalog";
 import {
+  displayName,
   formatCompact,
   formatScore,
   formatRelativeTime,
@@ -83,7 +84,9 @@ export default function HomePage() {
     noiBat?.noi_dung ||
     "Chả nướng than hoa xém cạnh, nước chấm chua ngọt vừa vặn — bữa trưa khiến mình nhớ mãi.";
   const linkNoiBat = noiBat ? `/review/${noiBat.id}` : "/feed";
-  const tacGiaNoiBat = noiBat?.ten_nguoi_dung || "Minh Anh";
+  const tacGiaNoiBat =
+    displayName(noiBat?.ho_ten_nguoi_dung, noiBat?.ten_nguoi_dung) ||
+    "Minh Anh";
   const thoiGianNoiBat = noiBat?.ngay_tao
     ? formatRelativeTime(noiBat.ngay_tao)
     : "2 ngày trước";

@@ -8,12 +8,12 @@ Dự án review quán ăn gồm **BackEnd Django REST Framework** và **FrontEnd
 
 - **Xác thực bằng session Django**: trang đăng nhập / đăng ký riêng tại `/dang-nhap` và `/dang-ky`; khi mở web, FrontEnd gọi `GET /api/ho-so/` để kiểm tra phiên đã lưu và tự chuyển về trang đăng nhập nếu chưa có phiên (kèm `?next=` để quay lại đúng trang đang mở). Đăng xuất, gửi kèm `X-CSRFToken` cho các request ghi dữ liệu.
 - **Quán yêu thích**: bảng `QuanYeuThich` (người dùng · nhà hàng · ngày lưu, mỗi quán lưu một lần) với API `/api/quan-yeu-thich/`. Người dùng lưu quán ở **trang chi tiết bài viết**; ở **Feed**, thẻ chỉ hiện nút khi quán đã lưu (bấm để bỏ lưu), thẻ chưa lưu không có nút. Danh sách hiện ở tab “Quán đã lưu” của trang cá nhân.
-- **Feed**: lấy bài review thật từ API, **chỉ hiển thị bài đã được duyệt** (bài chờ duyệt / bị từ chối chỉ nằm ở trang cá nhân của tác giả), tìm kiếm có debounce, lọc theo loại ẩm thực, sắp xếp, phân trang "Xem thêm", trạng thái tải/lỗi/rỗng.
+- **Feed**: lấy bài review thật từ API, **chỉ hiển thị bài đã được duyệt** (bài chờ duyệt / bị từ chối chỉ nằm ở trang cá nhân của tác giả), tìm kiếm có debounce, lọc theo loại ẩm thực, sắp xếp, phân trang "Xem thêm", trạng thái tải/lỗi/rỗng. Tên tác giả trên thẻ lấy theo **họ tên hiển thị** (sửa được ở trang cá nhân) và cập nhật ngay khi đổi tên; ai chưa đặt họ tên thì dùng username.
 - **Chi tiết bài review** (`/review/:id`): ảnh, video nhúng YouTube/TikTok/Vimeo, điểm 4 tiêu chí, thích, lưu quán, theo dõi tác giả, bình luận, form chấm điểm, nút **Báo cáo**.
 - **Báo cáo tới quản trị viên**: bảng `BaoCao` (tố cáo nội dung / báo lỗi giao diện / báo lỗi dữ liệu / khác, kèm trạng thái xử lý và phản hồi). Nút “Báo cáo” ở trang chi tiết (gắn với bài viết) và nút cờ trên header (báo lỗi chung); quản trị viên xử lý trong Django Admin.
 - **Đăng bài** (`/create`): chọn quán có sẵn hoặc thêm quán mới, chọn/tạo thẻ món ăn, tải nhiều ảnh, chọn ảnh bìa, nhập link video có xem trước, chấm điểm, xem trước bài viết.
 - **Kiểm duyệt bài viết**: bài mới ở trạng thái `cho_duyet`; quản trị viên **duyệt** hoặc **từ chối kèm lý do** (Django Admin hoặc API `duyet` / `tu_choi`). Tác giả theo dõi ở tab “Đang duyệt” của trang cá nhân: bài chờ duyệt và bài **Bị từ chối** kèm lý do của quản trị viên.
-- **Trang cá nhân** (`/profile`): hồ sơ thật, thống kê, tab bài đã đăng / đang duyệt / quán đã lưu, chia sẻ hồ sơ.
+- **Trang cá nhân** (`/profile`): hồ sơ thật, thống kê, tab bài đã đăng / đang duyệt / quán đã lưu, chia sẻ hồ sơ và **chỉnh sửa thông tin cá nhân** (họ tên, email, tiểu sử, ảnh đại diện) bằng hộp thoại có xem trước ảnh, kiểm tra dữ liệu và báo lỗi ngay tại chỗ.
 - **Dữ liệu mẫu**: 5 người dùng, 6 nhà hàng, 8 bài review (6 đã đăng, 1 chờ duyệt, 1 bị từ chối) có ảnh/điểm/bình luận/lượt thích, 2 bài có video, 2 báo cáo mẫu.
 
 ## Yêu cầu môi trường
@@ -62,7 +62,7 @@ Gợi ý kiểm thử nhanh:
 1. Mở web → tự chuyển tới trang **Đăng nhập** (`/dang-nhap`) → đăng nhập bằng `ngoctran / MamMam123!` (hoặc bấm tab **Đăng ký** ở `/dang-ky` để tạo tài khoản mới).
 2. Vào **Feed**: thẻ chưa lưu không có nút; mở một bài review → bấm **Lưu quán** → quay lại Feed, thẻ của quán đó hiện nút **bỏ lưu**.
 3. Ở trang chi tiết, thử **Báo cáo** bài viết (chọn loại, mô tả ≥ 10 ký tự → gửi); nút cờ trên header để báo lỗi chung.
-4. Vào **Trang cá nhân** → tab **Đang duyệt** để xem bài chờ duyệt và bài bị từ chối kèm lý do; tab **Quán đã lưu** để xem/bỏ lưu quán.
+4. Vào **Trang cá nhân** → bấm **Chỉnh sửa hồ sơ** để đổi họ tên, email, tiểu sử hoặc ảnh đại diện (thử cả **Xóa ảnh**); tab **Đang duyệt** để xem bài chờ duyệt và bài bị từ chối kèm lý do; tab **Quán đã lưu** để xem/bỏ lưu quán.
 5. Vào **Đăng bài**, chọn quán, nhập nội dung, thêm link YouTube, tải ảnh → **Đăng review** (bài mới sẽ ở trạng thái chờ duyệt).
 6. Duyệt / từ chối bài trong **Django Admin** (`/admin/` → Bài review → chọn bài → action “Duyệt…” hoặc “Từ chối…”, nhập ô *Lý do từ chối* trước khi từ chối).
 7. Bấm **Đăng xuất** trên header → quay lại trang đăng nhập; thử mở lại `/feed` để thấy tự chuyển hướng về `/dang-nhap?next=/feed`.
@@ -114,6 +114,7 @@ Project_Web_Fullstack/
 │       │   ├── Auth/             # AuthCard + LoginForm + RegisterForm
 │       │   ├── Header/           # điều hướng + nút báo lỗi / tố cáo
 │       │   ├── ReportModal/      # hộp thoại gửi báo cáo tới quản trị viên
+│       │   ├── ProfileEditModal/ # hộp thoại chỉnh sửa thông tin cá nhân
 │       │   ├── ReviewCard/       # thẻ bài viết + nút lưu / bỏ lưu quán
 │       │   ├── StarPicker/
 │       │   └── ProtectedRoute/   # ProtectedRoute (bắt buộc đăng nhập) + GuestRoute
@@ -128,7 +129,8 @@ Project_Web_Fullstack/
 - **Video**: `src/utils/videoEmbed.js` nhận diện YouTube (`watch`, `youtu.be`, `shorts`, `live`, `embed`), TikTok và Vimeo, đổi sang URL nhúng iframe 16:9.
 - **Ảnh**: ảnh mẫu được sao chép từ `FrontEnd/src/assets/img` sang `BackEnd/media/` khi chạy `tao_du_lieu_mau`; ảnh người dùng tải lên lưu tại `BackEnd/media/reviews/`.
 - **Kiểm duyệt**: bài mới ở trạng thái `cho_duyet`; tác giả và quản trị viên vẫn xem được. Quản trị viên duyệt / từ chối trong Django Admin (action hàng loạt, nhập ô “Lý do từ chối” trước khi từ chối) hoặc qua `POST /api/bai-review/{id}/duyet/` và `/tu_choi/`. Bài bị từ chối chuyển sang `bi_tu_choi`, lý do lưu ở `BaiReview.ly_do_tu_choi` và hiển thị ở tab “Đang duyệt” + trang chi tiết.
-- **Báo cáo**: mỗi người chỉ được có một báo cáo đang chờ xử lý cho cùng một bài viết (chặn trùng ở serializer); nội dung mô tả tối thiểu 10 ký tự.
+- **Báo cáo**: mỗi người chỉ được có một báo cáo đang chờ xử lý cho cùng một bài viết (chặn trùng ở serializer); nội dung mô tả tối thiểu 10 ký tự. Cả hộp thoại báo cáo và hộp thoại chỉnh sửa hồ sơ đều được dựng bằng `createPortal` vào `<body>` để `position: fixed` không bị header (`backdrop-filter`) nhốt vào thanh điều hướng.
+- **Tên hiển thị tác giả**: `BaiReviewSerializer` và `BinhLuanSerializer` trả thêm trường chỉ-đọc `ho_ten_nguoi_dung` (khối “quán đã lưu” cũng có trường này); FrontEnd ưu tiên họ tên và chỉ quay về `ten_nguoi_dung` (username) khi họ tên để trống. Nhờ vậy đổi họ tên ở trang cá nhân là Feed, trang chi tiết, bình luận và trang chủ cập nhật ngay, không cần đăng nhập lại.
 - **Dữ liệu mẫu** có thể chạy lại nhiều lần: lệnh dùng `get_or_create` theo khóa nghiệp vụ.
 
 ## Giao diện
@@ -138,5 +140,7 @@ Project_Web_Fullstack/
 ![Trang cá nhân — tab “Đang duyệt” với bài chờ duyệt và bài bị từ chối kèm lý do](docs/dang-duyet.png)
 
 ![Hộp thoại báo cáo bài viết tới quản trị viên](docs/bao-cao.png)
+
+![Hộp thoại chỉnh sửa thông tin cá nhân trên trang cá nhân](docs/chinh-sua-ho-so.png)
 
 ![Trang cá nhân — tab “Quán đã lưu” với nút bỏ lưu trên từng thẻ](docs/profile.png)

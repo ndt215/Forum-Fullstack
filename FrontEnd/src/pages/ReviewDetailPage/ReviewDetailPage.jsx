@@ -42,6 +42,7 @@ import {
 } from "../../api/reviews";
 import {
   cuisineLabel,
+  displayName,
   formatDate,
   formatRelativeTime,
   formatScore,
@@ -439,6 +440,11 @@ export default function ReviewDetailPage() {
     .map((anh) => anh.url)
     .filter(Boolean);
   const laTacGia = isAuthenticated && user?.id === review.nguoi_dung;
+  // Ưu tiên họ tên (sửa được ở trang cá nhân), chưa đặt thì dùng username.
+  const tenTacGia = displayName(
+    review.ho_ten_nguoi_dung,
+    review.ten_nguoi_dung,
+  );
   const dangMoCua = kiemTraDangMoCua(review.gio_mo_cua, review.gio_dong_cua);
   const soBinhLuan = Math.max(review.so_binh_luan || 0, comments.length);
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
@@ -503,11 +509,11 @@ export default function ReviewDetailPage() {
                 />
               ) : (
                 <span className={styles.avatarFallback} aria-hidden="true">
-                  {initials(review.ten_nguoi_dung)}
+                  {initials(tenTacGia)}
                 </span>
               )}
               <span>
-                <strong>{review.ten_nguoi_dung}</strong>
+                <strong>{tenTacGia}</strong>
                 <small>
                   {formatDate(review.ngay_tao)} · {tinhPhutDoc(review.noi_dung)}{" "}
                   phút đọc
@@ -749,13 +755,23 @@ export default function ReviewDetailPage() {
                           className={styles.commentAvatarFallback}
                           aria-hidden="true"
                         >
-                          {initials(comment.ten_nguoi_dung)}
+                          {initials(
+                            displayName(
+                              comment.ho_ten_nguoi_dung,
+                              comment.ten_nguoi_dung,
+                            ),
+                          )}
                         </span>
                       )}
                       <div className={styles.commentBody}>
                         <div className={styles.commentBubble}>
                           <div className={styles.commentTop}>
-                            <strong>{comment.ten_nguoi_dung}</strong>
+                            <strong>
+                              {displayName(
+                                comment.ho_ten_nguoi_dung,
+                                comment.ten_nguoi_dung,
+                              )}
+                            </strong>
                             <small>{formatRelativeTime(comment.ngay_tao)}</small>
                           </div>
                           <p>{comment.noi_dung}</p>
@@ -1022,11 +1038,11 @@ export default function ReviewDetailPage() {
                   <img src={review.avatar_nguoi_dung} alt="" width="56" height="56" />
                 ) : (
                   <span className={styles.authorAvatarFallback} aria-hidden="true">
-                    {initials(review.ten_nguoi_dung)}
+                    {initials(tenTacGia)}
                   </span>
                 )}
                 <div>
-                  <strong>{review.ten_nguoi_dung}</strong>
+                  <strong>{tenTacGia}</strong>
                   <span>Thành viên Măm Măm</span>
                 </div>
               </div>

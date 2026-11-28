@@ -80,6 +80,14 @@ export function initials(name) {
   return `${words[0][0]}${words[words.length - 1][0]}`.toUpperCase();
 }
 
+/**
+ * Tên hiển thị: ưu tiên họ tên (người dùng sửa được ở trang cá nhân),
+ * chưa đặt họ tên thì quay về username.
+ */
+export function displayName(hoTen, username) {
+  return String(hoTen || "").trim() || username || "";
+}
+
 export function truncate(text, maxLength = 170) {
   const clean = String(text || "").replace(/\s+/g, " ").trim();
   if (clean.length <= maxLength) return clean;

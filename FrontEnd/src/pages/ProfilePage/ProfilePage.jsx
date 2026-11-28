@@ -9,6 +9,7 @@ import {
   Heart,
   Loader2,
   PenLine,
+  Pencil,
   RefreshCw,
   Share2,
   Sparkles,
@@ -16,6 +17,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import ReviewCard from '../../components/ReviewCard/ReviewCard';
+import ProfileEditModal from '../../components/ProfileEditModal/ProfileEditModal';
 import { useAuth } from '../../context/AuthContext';
 import {
   boLuuQuanYeuThich,
@@ -57,6 +59,8 @@ export default function ProfilePage() {
   const [shareNote, setShareNote] = useState('');
   const [saveLoadingId, setSaveLoadingId] = useState(null);
   const [saveNote, setSaveNote] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [editNote, setEditNote] = useState('');
 
   const tabParam = searchParams.get('tab');
   const tab = tabParam === 'saved' || tabParam === 'pending' ? tabParam : 'posts';
@@ -173,6 +177,11 @@ export default function ProfilePage() {
     setTimeout(() => setShareNote(''), 3200);
   }
 
+  function xuLyDaCapNhatHoSo() {
+    setEditNote('Đã cập nhật thông tin cá nhân.');
+    setTimeout(() => setEditNote(''), 3200);
+  }
+
   if (!user) return null;
 
   const tongLuotThich = reviews.reduce(
@@ -261,12 +270,26 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   className={styles.secondaryAction}
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Pencil size={15} aria-hidden="true" />
+                  Chỉnh sửa hồ sơ
+                </button>
+                <button
+                  type="button"
+                  className={styles.secondaryAction}
                   onClick={chiaSeHoSo}
                 >
                   <Share2 size={15} aria-hidden="true" />
                   Chia sẻ hồ sơ
                 </button>
               </div>
+
+              {editNote && (
+                <p className={styles.shareNote} role="status">
+                  {editNote}
+                </p>
+              )}
 
               {shareNote && (
                 <p className={styles.shareNote} role="status">
@@ -521,6 +544,12 @@ export default function ProfilePage() {
           </div>
         </div>
       </section>
+
+      <ProfileEditModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        onSaved={xuLyDaCapNhatHoSo}
+      />
     </div>
   );
 }
