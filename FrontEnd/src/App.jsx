@@ -1,8 +1,16 @@
 import { useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import AuthProvider from "./context/AuthProvider";
 import { useAuth } from "./context/AuthContext";
+import Header from "./components/Header/Header";
 import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 import GuestRoute from "./components/ProtectedRoute/GuestRoute";
 import AuthPage from "./pages/AuthPage/AuthPage";
@@ -33,6 +41,18 @@ function BootScreen() {
   );
 }
 
+/** Khung chung của các trang công khai: header + nội dung trang. */
+function MainLayout() {
+  return (
+    <>
+      <Header />
+      <main>
+        <Outlet />
+      </main>
+    </>
+  );
+}
+
 function AppRoutes() {
   const { dangKhoiTao } = useAuth();
 
@@ -59,14 +79,19 @@ function AppRoutes() {
         }
       />
 
-      {/* Toàn bộ phần còn lại yêu cầu đăng nhập */}
-      <Route element={<ProtectedRoute />}>
+      {/* Khách chưa đăng nhập vẫn xem được bài đã đăng; phần ghi dữ liệu
+          (đăng bài, trang cá nhân) mới yêu cầu đăng nhập. */}
+      <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/feed" element={<FeedPage />} />
         <Route path="/review/:id" element={<ReviewDetailPage />} />
         <Route path="/review" element={<Navigate to="/feed" replace />} />
-        <Route path="/create" element={<CreatePostPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/create" element={<CreatePostPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
+
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

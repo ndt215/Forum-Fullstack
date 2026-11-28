@@ -10,6 +10,7 @@ import {
   Flame,
   Heart,
   Loader2,
+  LogIn,
   MapPin,
   MessageCircle,
   Navigation,
@@ -554,7 +555,7 @@ export default function ReviewDetailPage() {
               <button
                 type="button"
                 className={styles.actionButton}
-                onClick={() => setReportOpen(true)}
+                onClick={() => (isAuthenticated ? setReportOpen(true) : yeuCauDangNhap())}
                 title="Báo cáo bài viết này tới quản trị viên"
               >
                 <Flag size={15} aria-hidden="true" />
@@ -808,12 +809,27 @@ export default function ReviewDetailPage() {
                   )}
                 </form>
               ) : (
-                <p className={styles.commentPrompt}>
-                  <Link to={`/dang-nhap?next=${encodeURIComponent(`/review/${id}`)}`}>
-                    Đăng nhập
-                  </Link>{" "}
-                  để tham gia thảo luận cùng cộng đồng Măm Măm.
-                </p>
+                <div className={styles.commentForm}>
+                  <textarea
+                    className={styles.commentLockedInput}
+                    rows={3}
+                    readOnly
+                    placeholder="Đăng nhập để bình luận…"
+                    onClick={yeuCauDangNhap}
+                    aria-label="Đăng nhập để bình luận"
+                  />
+                  <div className={styles.commentFormFooter}>
+                    <span>Bạn cần đăng nhập để tham gia thảo luận.</span>
+                    <button
+                      type="button"
+                      className={styles.commentSubmit}
+                      onClick={yeuCauDangNhap}
+                    >
+                      <LogIn size={14} aria-hidden="true" />
+                      Đăng nhập để bình luận
+                    </button>
+                  </div>
+                </div>
               )}
             </section>
           </div>

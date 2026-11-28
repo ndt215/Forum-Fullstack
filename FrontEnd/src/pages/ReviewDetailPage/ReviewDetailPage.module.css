@@ -1143,6 +1143,18 @@
   outline: none;
 }
 
+.commentForm textarea.commentLockedInput {
+  background: #fffaf6;
+  color: var(--color-muted);
+  cursor: pointer;
+  resize: none;
+}
+
+.commentForm textarea.commentLockedInput:focus {
+  border-color: var(--color-line-strong);
+  box-shadow: none;
+}
+
 .commentFormFooter {
   display: flex;
   align-items: center;

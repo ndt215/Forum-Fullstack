@@ -1,11 +1,10 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import Header from "../Header/Header";
 import styles from "./ProtectedRoute.module.css";
 
 /**
- * Cổng bảo vệ cho toàn bộ khu vực cần đăng nhập.
+ * Cổng bảo vệ cho các trang cần đăng nhập.
  *
  * Khi mở web, <AuthProvider> gọi một lần GET /api/ho-so/ để kiểm tra phiên
  * đăng nhập đã lưu (session cookie do Django cấp). Trong lúc chờ thì hiện màn
@@ -30,12 +29,5 @@ export default function ProtectedRoute() {
     return <Navigate to={`/dang-nhap?next=${next}`} replace />;
   }
 
-  return (
-    <>
-      <Header />
-      <main>
-        <Outlet />
-      </main>
-    </>
-  );
+  return <Outlet />;
 }
