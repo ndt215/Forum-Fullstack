@@ -311,12 +311,9 @@ export default function FeedPage() {
                     {...baiReviewToCard(review)}
                     saved={Boolean(savedMap[review.nha_hang])}
                     saveLoading={saveLoadingId === review.nha_hang}
-<<<<<<< HEAD
                     // Feed không hiện nút "Lưu quán"; chỉ hiện nút "bỏ lưu"
                     // ở những thẻ mà người dùng đã lưu từ trang chi tiết.
                     allowSave={false}
-=======
->>>>>>> 10e11e78a0f876c04775151896a07e332623ca5d
                     onToggleSave={() => xuLyLuuQuan(review.nha_hang)}
                   />
                 ))}

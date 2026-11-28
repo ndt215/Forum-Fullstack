@@ -18,17 +18,12 @@ import styles from './ReviewCard.module.css';
  * Card món ăn dùng chung cho Feed và Profile.
  * Dữ liệu có thể đến từ API (xem utils/adapters.js).
  *
-<<<<<<< HEAD
  * Nút lưu quán chỉ hiện khi:
  * - thẻ đã được truyền `onToggleSave`, và
  * - quán đã được lưu (`saved`) hoặc thẻ cho phép hiện nút lưu (`allowSave`).
  *
  * Ở Feed, `allowSave = false` nên thẻ chưa lưu không có nút; người dùng lưu quán
  * ở trang chi tiết bài viết, khi quay lại Feed thẻ đó hiện nút "bỏ lưu".
-=======
- * Nếu truyền `onToggleSave`, góc trên bên phải thẻ có nút lưu / bỏ lưu quán
- * (bảng QuanYeuThich ở BackEnd).
->>>>>>> 10e11e78a0f876c04775151896a07e332623ca5d
  */
 export default function ReviewCard({
   id,
@@ -52,27 +47,17 @@ export default function ReviewCard({
   videoUrl,
   saved = false,
   saveLoading = false,
-<<<<<<< HEAD
   allowSave = true,
-=======
->>>>>>> 10e11e78a0f876c04775151896a07e332623ca5d
   onToggleSave,
 }) {
   const href = to || (id ? `/review/${id}` : '/feed');
   const diem = Number(rating) || 0;
   const tenQuan = restaurant || 'quán ăn';
-<<<<<<< HEAD
   const hienNutLuu = Boolean(onToggleSave) && (saved || allowSave);
 
   return (
     <article className={styles.card}>
       {hienNutLuu && (
-=======
-
-  return (
-    <article className={styles.card}>
-      {onToggleSave ? (
->>>>>>> 10e11e78a0f876c04775151896a07e332623ca5d
         <button
           type="button"
           className={`${styles.saveButton} ${saved ? styles.saveButtonActive : ''}`}
@@ -90,17 +75,6 @@ export default function ReviewCard({
             <Bookmark size={16} aria-hidden="true" />
           )}
         </button>
-<<<<<<< HEAD
-=======
-      ) : (
-        // Không truyền onToggleSave vẫn giữ biểu tượng dấu trang như trước.
-        <span
-          className={`${styles.saveButton} ${styles.saveButtonStatic}`}
-          aria-hidden="true"
-        >
-          <Bookmark size={16} />
-        </span>
->>>>>>> 10e11e78a0f876c04775151896a07e332623ca5d
       )}
 
       <Link to={href} className={styles.link} aria-label={`Xem review: ${title}`}>
